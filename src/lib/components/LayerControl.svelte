@@ -3,6 +3,7 @@
   import { LAYERS } from '$lib/constants/layers';
   import { get } from 'svelte/store';
   import { onMount } from 'svelte';
+  import { onMapLoaded } from '$lib/utils/map';
 
   type LayerKey = keyof typeof LAYERS;
 
@@ -25,21 +26,25 @@
   function applyVisibility(key: LayerKey) {
     const map = get(mapStore);
     if (!map) return;
-    const def = LAYERS[key];
-    def.ids.forEach((id) =>
-      map.setLayoutProperty(id, 'visibility', visibility[key] ? 'visible' : 'none')
-    );
+    onMapLoaded(map, () => {
+      const def = LAYERS[key];
+      def.ids.forEach((id) =>
+        map.setLayoutProperty(id, 'visibility', visibility[key] ? 'visible' : 'none')
+      );
+    });
   }
 
   function applyDetailFilter() {
     const map = get(mapStore);
     if (!map) return;
-    Object.entries(LAYERS).forEach(([key, def]) => {
-      if (def.detailFilter) {
-        def.ids.forEach((id) => {
-          map.setFilter(id, reduceDetails ? def.detailFilter! : null);
-        });
-      }
+    onMapLoaded(map, () => {
+      Object.entries(LAYERS).forEach(([key, def]) => {
+        if (def.detailFilter) {
+          def.ids.forEach((id) => {
+            map.setFilter(id, reduceDetails ? def.detailFilter! : null);
+          });
+        }
+      });
     });
   }
 

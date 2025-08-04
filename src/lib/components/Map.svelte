@@ -25,11 +25,13 @@
       zoom
     });
 
-    // expose map instance via store for other components
-    mapStore.set(map);
+    map.on('style.load', () => {
+      // expose map instance via store for other components
+      mapStore.set(map!);
 
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
-    map.addControl(new maplibregl.ScaleControl());
+      map!.addControl(new maplibregl.NavigationControl(), 'top-right');
+      map!.addControl(new maplibregl.ScaleControl());
+    });
 
     return () => {
       mapStore.set(undefined);
