@@ -1,129 +1,115 @@
-TODO:
-Dieses Dokument beschreibt die Schritte, um eine Webanwendung zu erstellen. Wir verwenden SvelteKit als Full-Stack-Framework, MapLibre GL JS für die Kartendarstellung, Turf.js für Geodaten-Berechnungen und Three.js für die 3D-Visualisierung und den Export. Alle Daten werden von der OpenStreetMap (OSM) Overpass API bezogen.
+Projektplan: Interaktiver Generator für Geodaten-basierte 3D-Szenen
+Vision: Entwicklung einer spezialisierten Web-Anwendung zur Erstellung, Visualisierung und zum Export von detaillierten 3D-Szenen auf Basis von Open-Source-Geodaten. Die Plattform soll den Import von GPS-Tracks (GPX), eine interaktive Pfaderstellung sowie eine feingranulare Steuerung über die visuellen Elemente der Karte und die Parameter des generierten 3D-Modells ermöglichen.
 
-Phase 1: Projekt-Setup und Karten-Interface
-[ ] Initialisiere ein neues SvelteKit-Projekt.
+Technologiestack:
 
-Wähle "Skeleton project".
+Full-Stack-Framework: SvelteKit
 
-Füge TypeScript-Unterstützung hinzu.
+Kartendarstellung: MapLibre GL JS
 
-Richte ESLint und Prettier für Code-Qualität ein.
+GPS-Daten-Parsing: gpx-parser-builder
 
-[ ] Installiere notwendige Bibliotheken.
+Interaktive Zeichenwerkzeuge: maplibre-gl-draw
 
-npm install maplibre-gl @turf/turf three
+Geodaten-Verarbeitung: Turf.js
 
-npm install -D @types/three @types/turf
+Datenquelle: Overpass API (OpenStreetMap)
 
-[ ] Erstelle eine Vollbild-Kartenkomponente (Map.svelte).
+3D-Rendering & Export: Three.js
 
-Initialisiere MapLibre GL JS.
+TODO.md
+Phase 1: Fundament, Karten-Interface & Layer-Management
 
-Nutze einen freien Kartenstil, z.B. von Maptiler oder Stadia Maps.
+[ ] Projekt-Setup & Basiskonfiguration.
 
-Setze den initialen Kartenfokus auf eine Stadt mit guten OSM-Daten (z.B. Berlin, Deutschland).
+Initialisiere das SvelteKit-Projekt mit TypeScript und Tailwind CSS wie im ursprünglichen Plan.
 
-Die Karte soll den gesamten Viewport ausfüllen.
+Installiere zusätzliche Bibliotheken: npm install gpx-parser-builder maplibre-gl-draw.
 
-[ ] Implementiere ein einfaches UI-Overlay.
+[ ] Entwicklung der zentralen Karten-Komponente (Map.svelte).
 
-Erstelle eine Controls.svelte Komponente.
+Initialisiere MapLibre GL JS mit einem flexiblen Vektor-Kartenstil (z.B. von Stadia Maps), der klar definierte Layer für Gebäude, Gewässer, Grünflächen (landuse=grass, natural=wood), Sandflächen (natural=sand) und Straßen enthält.
 
-Füge einen Header-Titel hinzu.
+Implementiere ein responsives UI-Layout mit einem persistenten Seitenpanel für alle Steuerungsoptionen.
 
-Erstelle einen Button mit der Beschriftung "Bereich auswählen", der vorerst deaktiviert ist.
+[ ] Implementierung der Layer- und Detailsteuerung.
 
-Phase 2: Bereichsauswahl und Datenabruf
-[ ] Implementiere eine Funktion zur Bereichsauswahl auf der Karte.
+Erstelle eine LayerControl.svelte Komponente.
 
-Nutze die maplibre-gl-draw Erweiterung oder baue eine simple Rechteck-Zieh-Funktion.
+Füge Checkboxes/Toggles für primäre Kartenelemente hinzu: Gebäude, Gewässer, Grünflächen, Straßennetz.
 
-Wenn der Benutzer einen Bereich gezeichnet hat, speichere die Bounding-Box-Koordinaten ([minLng, minLat, maxLng, maxLat]) in einem Svelte Store.
+Die Steuerelemente schalten die Sichtbarkeit der entsprechenden Layer in MapLibre über map.setLayoutProperty('layer-id', 'visibility', 'visible'/'none') um.
 
-Aktiviere den "Modell generieren"-Button, sobald eine gültige Auswahl existiert.
+Füge eine Option "Details reduzieren" hinzu. Diese Funktion nutzt MapLibre-Filter (setFilter), um kleine Objekte auszublenden (z.B. Gebäude mit einer Fläche unter 50m²), was die Übersichtlichkeit erhöht.
 
-[ ] Erstelle einen SvelteKit API Endpoint (/api/generate-model).
+Phase 2: GPX-Import und interaktive Pfad-Werkzeuge
 
-Dieser Endpoint akzeptiert eine Bounding-Box via POST-Request.
+[ ] Implementierung des GPX-Track-Uploads.
 
-Er soll die Bounding-Box validieren.
+Erstelle eine GpxUpload.svelte Komponente mit einem <input type="file" accept=".gpx">.
 
-[ ] Rufe Gebäudedaten von der Overpass API ab.
+Nutze die gpx-parser-builder-Bibliothek, um die hochgeladene GPX-Datei clientseitig zu parsen.
 
-Konstruiere im API-Endpoint eine Overpass QL-Query, um alle Gebäude (way["building"]) innerhalb der übergebenen Bounding-Box zu finden.
+Extrahiere die Koordinaten des ersten Tracks aus den geparsten Daten.
 
-Führe die Anfrage an die öffentliche Overpass API (https://overpass-api.de/api/interpreter) aus.
+Zeichne den Verlauf als Polyline (Linienzug) auf der Karte, indem du eine neue GeoJSON-Quelle und einen Linien-Layer zu MapLibre hinzufügst.
 
-Konvertiere die OSM-Antwort (XML oder JSON) in ein GeoJSON-Format. Die osm-and-geojson Bibliothek kann hier helfen, oder schreibe eine eigene Transformationslogik.
+Die Kamera soll automatisch auf den Bereich des hochgeladenen Tracks zoomen (map.fitBounds).
 
-Phase 3: 3D-Modell-Generierung
-[ ] Verarbeite die GeoJSON-Daten im Backend.
+[ ] Entwicklung eines Werkzeugs zur interaktiven Pfaderstellung.
 
-Für jedes Polygon (Gebäude) im GeoJSON:
+Konfiguriere maplibre-gl-draw, um den Modus zum Zeichnen und Bearbeiten von Linienzügen (draw_line_string) zu aktivieren.
 
-Weise eine zufällige Höhe zu (z.B. zwischen 10 und 50 Metern), da OSM nicht immer Höhenangaben liefert. Speichere die Höhe als Property im GeoJSON-Feature.
+Stelle sicher, dass der Benutzer:
 
-Vereinfache komplexe Polygone optional mit turf.simplify, um die Performance zu verbessern.
+Wegpunkte durch Klicken auf die Karte hinzufügen kann.
 
-[ ] Implementiere die Extrusionslogik.
+Bestehende Wegpunkte per Drag-and-Drop verschieben kann.
 
-Erstelle eine serverseitige Funktion, die GeoJSON-Polygone in eine 3D-Geometrie umwandelt.
+Wegpunkte nachträglich einfügen kann (durch Klicken auf die Linie zwischen zwei Punkten).
 
-Nutze eine Bibliothek wie earcut für die Triangulierung der Grundflächen.
+Einzelne Wegpunkte entfernen kann (z.B. durch Anklicken und Drücken der Entf-Taste).
 
-Extrudiere die triangulierte Fläche zur zugewiesenen Höhe, um einfache Gebäudeblöcke zu erstellen.
+Die Koordinaten des gezeichneten Pfades werden reaktiv in einem Svelte Store gespeichert.
 
-Gib die resultierenden Vertices und Faces als JSON-Struktur an das Frontend zurück.
+Phase 3: Erweiterte 3D-Generierung & API
 
-Phase 4: 3D-Visualisierung und Export
-[ ] Erstelle eine 3D-Viewer-Komponente (Viewer.svelte).
+[ ] Erweiterung des UI für 3D-Modellierungsoptionen (ModelControls.svelte).
 
-Nutze Three.js, um eine Szene, eine Kamera (PerspectiveCamera) und einen Renderer (WebGLRenderer) zu initialisieren.
+Implementiere UI-Elemente für die folgenden Parameter:
 
-Implementiere eine OrbitControls-Steuerung für die Navigation in der 3D-Szene.
+Maßstab: Ein Dropdown-Menü oder Slider (z.B. 1:500, 1:1000, 1:2500, 1:5000). Dieser Wert steuert primär die maximale Größe des Auswahlbereichs und potenziell den Detailgrad der Abfrage.
 
-Füge eine einfache Beleuchtung hinzu (AmbientLight und DirectionalLight).
+Basishöhe (m): Ein numerisches Eingabefeld, um das gesamte Modell anzuheben oder abzusenken.
 
-[ ] Visualisiere das generierte Modell.
+Gebäudehöhe-Multiplikator: Ein Slider (z.B. von 0.5 bis 3.0), um die prozedural ermittelte Höhe aller Gebäude zu skalieren.
 
-Wenn der API-Call aus Phase 2 erfolgreich ist, übergib die Geometriedaten an die Viewer.svelte Komponente.
+Elementauswahl für 3D-Modell: Eine Gruppe von Checkboxes (Gebäude, Straßen, Gewässer etc.), die festlegt, welche Datentypen von der Overpass API abgefragt und im 3D-Modell RENDERED werden sollen (unabhängig von der 2D-Kartenansicht).
 
-Erstelle für jedes Gebäude ein THREE.Mesh mit BufferGeometry aus den Vertices und einem MeshStandardMaterial.
+[ ] Anpassung des API-Endpunkts (/api/model/+server.ts).
 
-Füge die Meshes der Szene hinzu.
+Erweitere die POST-Anfrage, sodass sie alle neuen Parameter (Basishöhe, Multiplikator, Elementauswahl) entgegennimmt.
 
-Füge eine Grundplatte (PlaneGeometry) hinzu, die dem ausgewählten Bereich entspricht.
+Passe die Overpass-Query dynamisch an, je nachdem, welche Elemente der Benutzer für das 3D-Modell ausgewählt hat.
 
-[ ] Implementiere die Export-Funktion.
+Integriere die Basishöhe und den Gebäudehöhe-Multiplikator in die serverseitige Logik zur 3D-Geometrie-Synthese. Die Basishöhe wird auf die Y-Koordinate aller Vertices addiert, der Multiplikator wird bei der Höhenberechnung der Gebäude angewendet.
 
-Füge einen "Exportieren"-Button zum UI hinzu.
+Phase 4: 3D-Synthese, Visualisierung & Export
 
-Installiere THREE.GLTFExporter.
+[ ] Verfeinerung der serverseitigen 3D-Generierung.
 
-Schreibe eine Funktion, die die aktuelle Three.js-Szene (nur die Gebäudemeshes) in das glTF/GLB-Format exportiert.
+Implementiere die Logik zur Verarbeitung der ausgewählten Elemente. Beispielsweise können Straßen und Gewässer als flache, extrudierte Flächen zum 3D-Modell hinzugefügt werden, um Kontext zu schaffen.
 
-Triggere einen Browser-Download der generierten .glb-Datei.
+Wende die Basishöhe und den Gebäudehöhe-Multiplikator wie in Phase 3 definiert an.
 
-Phase 5: Finalisierung und UX-Verbesserungen
-[ ] Implementiere Lade- und Fehlerzustände.
+Stelle weiterhin sicher, dass alle Geometrien für eine maximale Performance zu einem einzigen Mesh zusammengefügt werden, bevor die Daten an den Client gesendet werden.
 
-Zeige einen Lade-Spinner an, während die Daten von der Overpass API geladen und verarbeitet werden.
+[ ] Optimierung der 3D-Visualisierung (Viewer.svelte).
 
-Zeige dem Benutzer aussagekräftige Fehlermeldungen an (z.B. "Keine Gebäude in diesem Bereich gefunden" oder "API-Fehler").
+Die Viewer-Komponente bleibt im Kern gleich, lädt aber das nun komplexere Modell.
 
-[ ] Optimiere die 3D-Performance.
+Passe die initiale Kameraposition an, um sicherzustellen, dass das gesamte Modell inklusive der neuen Elemente gut sichtbar ist.
 
-Fasse alle Gebäude-Geometrien serverseitig in einer einzigen BufferGeometry zusammen (BufferGeometryUtils.mergeGeometries), um die Anzahl der Draw Calls im Frontend drastisch zu reduzieren.
+[ ] Anpassung der Export-Funktion.
 
-[ ] Stil verfeinern.
-
-Verbessere das CSS, um ein sauberes und modernes Erscheinungsbild zu erzielen, das sich an der Vorlage orientiert.
-
-Sorge für eine gute mobile Darstellung (Responsive Design).
-
-[ ] Deployment.
-
-Konfiguriere den SvelteKit-Adapter für eine geeignete Plattform (z.B. adapter-auto für Vercel oder adapter-node für einen eigenen Server).
-
-Deploye die Anwendung.
+Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die gesamte Szene, die nun die vom Benutzer ausgewählten und konfigurierten 3D-Elemente enthält. Stelle sicher, dass der Dateiname des Exports den Projektnamen oder das Datum widerspiegelt.
