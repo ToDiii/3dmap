@@ -20,7 +20,7 @@ Datenquelle: Overpass API (OpenStreetMap)
 TODO.md
 Phase 1: Fundament, Karten-Interface & Layer-Management
 
-[ ] Projekt-Setup & Basiskonfiguration.
+[x] Projekt-Setup & Basiskonfiguration.
 
 Initialisiere das SvelteKit-Projekt mit TypeScript und Tailwind CSS wie im ursprünglichen Plan.
 
