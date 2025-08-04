@@ -1,7 +1,8 @@
 <script lang="ts">
   import { get } from 'svelte/store';
   import maplibregl from 'maplibre-gl';
-  import GPX from 'gpx-parser-builder';
+  import { gpx } from '@tmcw/togeojson';
+  import { browser } from '$app/environment';
   import { mapStore } from '$lib/stores/map';
   import { pathStore } from '$lib/stores/pathStore';
 
@@ -15,21 +16,18 @@
       if (!input.files || input.files.length === 0) return;
       file = input.files[0];
       const text = await file.text();
-      const gpx = GPX.parse(text);
-      if (!gpx || !gpx.trk || gpx.trk.length === 0) {
+      if (!browser) return;
+      const dom = new DOMParser().parseFromString(text, 'application/xml');
+      const fc = gpx(dom) as GeoJSON.FeatureCollection;
+      const trackFeature = fc.features.find(
+        (f): f is GeoJSON.Feature<GeoJSON.LineString> => f.geometry?.type === 'LineString'
+      );
+      if (!trackFeature) {
         throw new Error('no track');
       }
-      const track = gpx.trk[0];
-      const coords: [number, number][] = [];
-      track.trkseg?.forEach((seg: any) => {
-        seg.trkpt?.forEach((pt: any) => {
-          const lat = pt.$?.lat;
-          const lon = pt.$?.lon;
-          if (typeof lat === 'number' && typeof lon === 'number') {
-            coords.push([lon, lat]);
-          }
-        });
-      });
+      const coords = trackFeature.geometry.coordinates.map(
+        (p) => [p[0], p[1]] as [number, number]
+      );
       if (coords.length === 0) {
         throw new Error('no coords');
       }
@@ -37,11 +35,11 @@
         type: 'LineString',
         coordinates: coords
       };
-      const geojson = {
+      const geojson: GeoJSON.Feature<GeoJSON.LineString> = {
         type: 'Feature',
         geometry,
         properties: {}
-      } as GeoJSON.Feature<GeoJSON.LineString>;
+      };
       pathStore.set(geometry);
 
       const map = get(mapStore);

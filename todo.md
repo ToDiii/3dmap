@@ -7,7 +7,7 @@ Full-Stack-Framework: SvelteKit
 
 Kartendarstellung: MapLibre GL JS
 
-GPS-Daten-Parsing: gpx-parser-builder
+GPS-Daten-Parsing: @tmcw/togeojson
 
 Interaktive Zeichenwerkzeuge: maplibre-gl-draw
 
@@ -32,7 +32,7 @@ Phase 1: Fundament, Karten-Interface & Layer-Management
 
 Initialisiere das SvelteKit-Projekt mit TypeScript und Tailwind CSS wie im ursprünglichen Plan.
 
-[x] Installiere zusätzliche Bibliotheken: npm install gpx-parser-builder maplibre-gl-draw.
+[x] Installiere zusätzliche Bibliotheken: npm install @tmcw/togeojson maplibre-gl-draw.
 
 ✔️ Unterstützung für ES-Module (type="module") aktiviert, um ESM-Bibliotheken zu importieren.
 
@@ -54,11 +54,11 @@ Füge eine Option "Details reduzieren" hinzu. Diese Funktion nutzt MapLibre-Filt
 
 Phase 2: GPX-Import und interaktive Pfad-Werkzeuge
 
-[ ] Implementierung des GPX-Track-Uploads.
+[x] Implementierung des GPX-Track-Uploads.
 
 Erstelle eine GpxUpload.svelte Komponente mit einem <input type="file" accept=".gpx">.
 
-Nutze die gpx-parser-builder-Bibliothek, um die hochgeladene GPX-Datei clientseitig zu parsen.
+Nutze die @tmcw/togeojson-Bibliothek, um die hochgeladene GPX-Datei clientseitig zu parsen.
 
 Extrahiere die Koordinaten des ersten Tracks aus den geparsten Daten.
 
