@@ -8,6 +8,7 @@
   import type { ModelConfig } from '$lib/stores/modelConfigStore';
   import { bboxStore } from '$lib/stores/bboxStore';
   import { pathStore } from '$lib/stores/pathStore';
+  import { get } from 'svelte/store';
 
   let container: HTMLDivElement;
   let renderer: THREE.WebGLRenderer;
@@ -23,6 +24,7 @@
   let currentScale = 1;
   let currentBaseHeight = 0;
   let path: GeoJSON.LineString | null = null;
+  let debugInfo: any = null;
 
   function buildPathGeometry(
     p: GeoJSON.LineString | null,
@@ -94,8 +96,9 @@
         })
       });
       const data = await res.json();
-      buildScene(data.features, cfg.baseHeight, cfg.scale);
-      loadError = null;
+      console.log('BBox:', bbox, 'API Response:', data);
+      debugInfo = { bbox, response: data };
+      loadError = buildScene(data.features, cfg.baseHeight, cfg.scale);
     } catch (err) {
       console.error('failed to load model', err);
       loadError = 'Modell konnte nicht geladen werden';
@@ -122,13 +125,21 @@
     type: 'building' | 'road' | 'water';
   }
 
-  function buildScene(features: Feature[], baseHeight: number, scale: number) {
+  function buildScene(
+    features: Feature[],
+    baseHeight: number,
+    scale: number
+  ): string | null {
     clearGroup(modelGroup);
     currentScale = scale;
     currentBaseHeight = baseHeight;
     if (ground) {
       scene.remove(ground);
       ground = undefined;
+    }
+
+    if (!features || features.length === 0) {
+      return 'Keine Features geladen';
     }
 
     const geoms: Record<string, THREE.BufferGeometry[]> = {
@@ -157,12 +168,18 @@
       water: new THREE.MeshStandardMaterial({ color: 0x3399ff })
     };
 
+    let added = 0;
     for (const type of Object.keys(geoms)) {
       const g = geoms[type];
       if (!g.length) continue;
       const merged = mergeGeometries(g);
       const mesh = new THREE.Mesh(merged, materials[type]);
       modelGroup.add(mesh);
+      added += g.length;
+    }
+
+    if (added === 0) {
+      return 'Features vorhanden, aber leer';
     }
 
     const box = new THREE.Box3().setFromObject(modelGroup);
@@ -184,6 +201,7 @@
     ground = grid;
     scene.add(grid);
     buildPathGeometry(path, baseHeight, scale);
+    return null;
   }
 
   function onResize() {
@@ -222,7 +240,10 @@
     scene.add(dir);
 
     const unsub = modelConfigStore.subscribe((cfg) => loadModel(cfg));
-    const unsubBBox = bboxStore.subscribe((v) => (bbox = v));
+    const unsubBBox = bboxStore.subscribe((v) => {
+      bbox = v;
+      loadModel(get(modelConfigStore));
+    });
     const unsubPath = pathStore.subscribe((v) => {
       path = v;
       buildPathGeometry(path, currentBaseHeight, currentScale);
@@ -266,6 +287,11 @@
     </div>
     {#if loadError}
       <span class="px-2 py-1 text-sm bg-red-600 text-white rounded">{loadError}</span>
+    {/if}
+    {#if debugInfo}
+      <pre class="px-2 py-1 text-xs bg-white/80 rounded max-w-xs overflow-auto">
+{JSON.stringify({ bbox: debugInfo.bbox, features: debugInfo.response?.features?.length }, null, 2)}
+      </pre>
     {/if}
   </div>
 </div>

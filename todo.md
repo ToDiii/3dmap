@@ -125,3 +125,10 @@ Passe die initiale Kameraposition an, um sicherzustellen, dass das gesamte Model
 [x] Anpassung der Export-Funktion.
 
 Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die gesamte Szene, die nun die vom Benutzer ausgewählten und konfigurierten 3D-Elemente enthält. Stelle sicher, dass der Dateiname des Exports den Projektnamen oder das Datum widerspiegelt.
+
+## Aktuelle TODOs
+
+[x] Fix: Viewer lädt keine Features obwohl Bounding Box aktiv
+[x] Fix: PathEditor kann gezeichnete Pfade nicht löschen
+[x] Feature: Kreise als Auswahlfläche
+[x] Feature: Logging und Feedback, wenn keine OSM-Daten geladen werden
