@@ -32,7 +32,9 @@ Phase 1: Fundament, Karten-Interface & Layer-Management
 
 Initialisiere das SvelteKit-Projekt mit TypeScript und Tailwind CSS wie im ursprünglichen Plan.
 
-Installiere zusätzliche Bibliotheken: npm install gpx-parser-builder maplibre-gl-draw.
+[x] Installiere zusätzliche Bibliotheken: npm install gpx-parser-builder maplibre-gl-draw.
+
+✔️ Unterstützung für ES-Module (type="module") aktiviert, um ESM-Bibliotheken zu importieren.
 
 [ ] Entwicklung der zentralen Karten-Komponente (Map.svelte).
 
