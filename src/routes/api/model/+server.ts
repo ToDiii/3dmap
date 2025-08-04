@@ -74,6 +74,7 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   const query = buildOverpassQuery(elements, bbox);
+  console.log('Overpass query', { bbox, query });
   let osmData;
   try {
     const resp = await fetch('https://overpass-api.de/api/interpreter', {
@@ -85,7 +86,17 @@ export const POST: RequestHandler = async ({ request }) => {
     }
     osmData = await resp.json();
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'Failed to fetch Overpass data' }), { status: 500 });
+    console.error('Overpass request failed', err);
+    return new Response(
+      JSON.stringify({ error: 'Failed to fetch Overpass data', details: String(err) }),
+      { status: 500 }
+    );
+  }
+
+  if (!osmData?.elements || osmData.elements.length === 0) {
+    return new Response(JSON.stringify({ features: [], warning: 'Keine Daten vom Overpass-Server' }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
   const result = convertTo3D(osmData, scale, baseHeight, buildingMultiplier);

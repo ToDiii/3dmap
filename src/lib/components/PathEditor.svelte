@@ -61,6 +61,12 @@
     draw.changeMode('draw_line_string');
   }
 
+  function deletePath() {
+    if (!draw) return;
+    draw.deleteAll();
+    pathStore.set(null);
+  }
+
   onMount(() => {
     const unsubscribe = mapStore.subscribe((m) => {
       map = m;
@@ -82,5 +88,8 @@
 <div class="space-y-2">
   <button class="px-2 py-1 bg-blue-500 text-white rounded" on:click={startNewPath}>
     Neuen Pfad zeichnen
+  </button>
+  <button class="px-2 py-1 bg-red-500 text-white rounded" on:click={deletePath}>
+    Pfad löschen
   </button>
 </div>

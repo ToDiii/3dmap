@@ -8,6 +8,7 @@
   let map: MaplibreMap | undefined;
   let isDrawing = false;
   let start: [number, number] | null = null;
+  let drawingMode: 'rect' | 'circle' | null = null;
 
   function boundsToPolygon(bounds: LngLatBounds): GeoJSON.Polygon {
     const sw = bounds.getSouthWest();
@@ -67,8 +68,18 @@
     bboxStore.set(null);
   }
 
-  function startDrawing() {
+  function circleToPolygon(center: [number, number], radius: number, steps = 64): GeoJSON.Polygon {
+    const coords: [number, number][] = [];
+    for (let i = 0; i <= steps; i++) {
+      const ang = (i / steps) * Math.PI * 2;
+      coords.push([center[0] + radius * Math.cos(ang), center[1] + radius * Math.sin(ang)]);
+    }
+    return { type: 'Polygon', coordinates: [coords] };
+  }
+
+  function startDrawing(mode: 'rect' | 'circle') {
     if (!map) return;
+    drawingMode = mode;
     isDrawing = true;
     map.getCanvas().style.cursor = 'crosshair';
 
@@ -77,24 +88,47 @@
       map!.dragPan.disable();
 
       const onMove = (ev: MapMouseEvent) => {
-        const bounds = new LngLatBounds(start!, [ev.lngLat.lng, ev.lngLat.lat]);
-        updateSource(boundsToPolygon(bounds));
+        if (drawingMode === 'rect') {
+          const bounds = new LngLatBounds(start!, [ev.lngLat.lng, ev.lngLat.lat]);
+          updateSource(boundsToPolygon(bounds));
+        } else {
+          const r = Math.max(
+            Math.abs(ev.lngLat.lng - start![0]),
+            Math.abs(ev.lngLat.lat - start![1])
+          );
+          updateSource(circleToPolygon(start!, r));
+        }
       };
 
       const onUp = (ev: MapMouseEvent) => {
-        const bounds = new LngLatBounds(start!, [ev.lngLat.lng, ev.lngLat.lat]);
-        updateSource(boundsToPolygon(bounds));
-        bboxStore.set([
-          bounds.getSouth(),
-          bounds.getWest(),
-          bounds.getNorth(),
-          bounds.getEast()
-        ]);
+        if (drawingMode === 'rect') {
+          const bounds = new LngLatBounds(start!, [ev.lngLat.lng, ev.lngLat.lat]);
+          updateSource(boundsToPolygon(bounds));
+          bboxStore.set([
+            bounds.getSouth(),
+            bounds.getWest(),
+            bounds.getNorth(),
+            bounds.getEast()
+          ]);
+        } else {
+          const r = Math.max(
+            Math.abs(ev.lngLat.lng - start![0]),
+            Math.abs(ev.lngLat.lat - start![1])
+          );
+          updateSource(circleToPolygon(start!, r));
+          bboxStore.set([
+            start![1] - r,
+            start![0] - r,
+            start![1] + r,
+            start![0] + r
+          ]);
+        }
         map!.getCanvas().style.cursor = '';
         map!.off('mousemove', onMove);
         map!.off('mouseup', onUp);
         map!.dragPan.enable();
         isDrawing = false;
+        drawingMode = null;
       };
 
       map!.on('mousemove', onMove);
@@ -103,6 +137,9 @@
 
     map.once('mousedown', onMouseDown);
   }
+
+  const startRectangle = () => startDrawing('rect');
+  const startCircle = () => startDrawing('circle');
 
   onMount(() => {
     const unsubscribe = mapStore.subscribe((m) => {
@@ -113,8 +150,11 @@
 </script>
 
 <div class="space-y-2">
-  <button class="px-2 py-1 bg-blue-500 text-white rounded" on:click={startDrawing} disabled={isDrawing}>
+  <button class="px-2 py-1 bg-blue-500 text-white rounded" on:click={startRectangle} disabled={isDrawing}>
     Rechteck zeichnen
+  </button>
+  <button class="px-2 py-1 bg-green-500 text-white rounded" on:click={startCircle} disabled={isDrawing}>
+    Kreis zeichnen
   </button>
   <button class="px-2 py-1 bg-gray-300 rounded" on:click={clearBox}>
     Löschen
