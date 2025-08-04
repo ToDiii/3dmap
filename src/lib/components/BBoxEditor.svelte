@@ -3,6 +3,7 @@
   import { mapStore } from '$lib/stores/map';
   import { bboxStore } from '$lib/stores/bboxStore';
   import { LngLatBounds, type Map as MaplibreMap, type MapMouseEvent } from 'maplibre-gl';
+  import { onMapLoaded } from '$lib/utils/map';
 
   let map: MaplibreMap | undefined;
   let isDrawing = false;
@@ -29,15 +30,33 @@
 
   function updateSource(poly: GeoJSON.Polygon) {
     if (!map) return;
-    const data: GeoJSON.Feature<GeoJSON.Polygon> = { type: 'Feature', geometry: poly, properties: {} };
-    const source = map.getSource('bbox') as maplibregl.GeoJSONSource | undefined;
-    if (source) {
-      source.setData(data);
-    } else {
-      map.addSource('bbox', { type: 'geojson', data });
-      map.addLayer({ id: 'bbox-fill', type: 'fill', source: 'bbox', paint: { 'fill-color': '#088', 'fill-opacity': 0.1 } });
-      map.addLayer({ id: 'bbox-line', type: 'line', source: 'bbox', paint: { 'line-color': '#088', 'line-width': 2 } });
-    }
+    const m = map;
+    const run = () => {
+      const data: GeoJSON.Feature<GeoJSON.Polygon> = {
+        type: 'Feature',
+        geometry: poly,
+        properties: {}
+      };
+      const source = m.getSource('bbox') as maplibregl.GeoJSONSource | undefined;
+      if (source) {
+        source.setData(data);
+      } else {
+        m.addSource('bbox', { type: 'geojson', data });
+        m.addLayer({
+          id: 'bbox-fill',
+          type: 'fill',
+          source: 'bbox',
+          paint: { 'fill-color': '#088', 'fill-opacity': 0.1 }
+        });
+        m.addLayer({
+          id: 'bbox-line',
+          type: 'line',
+          source: 'bbox',
+          paint: { 'line-color': '#088', 'line-width': 2 }
+        });
+      }
+    };
+    onMapLoaded(m, run);
   }
 
   function clearBox() {

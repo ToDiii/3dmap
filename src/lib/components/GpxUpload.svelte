@@ -5,6 +5,7 @@
   import { browser } from '$app/environment';
   import { mapStore } from '$lib/stores/map';
   import { pathStore } from '$lib/stores/pathStore';
+  import { onMapLoaded } from '$lib/utils/map';
 
   let file: File | null = null;
   let error: string | null = null;
@@ -45,31 +46,33 @@
       const map = get(mapStore);
       if (!map) return;
 
-      const sourceId = 'gpx-track';
-      const layerId = 'gpx-track-line';
-      const existing = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
-      if (existing) {
-        existing.setData(geojson);
-      } else {
-        map.addSource(sourceId, { type: 'geojson', data: geojson });
-      }
-      if (!map.getLayer(layerId)) {
-        map.addLayer({
-          id: layerId,
-          type: 'line',
-          source: sourceId,
-          paint: {
-            'line-color': '#ff0000',
-            'line-width': 4
-          }
-        });
-      }
+      onMapLoaded(map, () => {
+        const sourceId = 'gpx-track';
+        const layerId = 'gpx-track-line';
+        const existing = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
+        if (existing) {
+          existing.setData(geojson);
+        } else {
+          map.addSource(sourceId, { type: 'geojson', data: geojson });
+        }
+        if (!map.getLayer(layerId)) {
+          map.addLayer({
+            id: layerId,
+            type: 'line',
+            source: sourceId,
+            paint: {
+              'line-color': '#ff0000',
+              'line-width': 4
+            }
+          });
+        }
 
-      const bounds = coords.reduce(
-        (b, coord) => b.extend(coord as [number, number]),
-        new maplibregl.LngLatBounds(coords[0], coords[0])
-      );
-      map.fitBounds(bounds, { padding: 20 });
+        const bounds = coords.reduce(
+          (b, coord) => b.extend(coord as [number, number]),
+          new maplibregl.LngLatBounds(coords[0], coords[0])
+        );
+        map.fitBounds(bounds, { padding: 20 });
+      });
     } catch (err) {
       console.error('failed to process GPX', err);
       error = 'GPX-Datei konnte nicht geladen werden';
