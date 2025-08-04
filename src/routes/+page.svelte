@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { Map, LayerControl, GpxUpload, PathEditor, ModelControls, Viewer } from '$lib';
+  import {
+    Map,
+    LayerControl,
+    GpxUpload,
+    PathEditor,
+    ModelControls,
+    Viewer,
+    BBoxEditor
+  } from '$lib';
   import type maplibregl from 'maplibre-gl';
   let map: maplibregl.Map | undefined;
   let showViewer = false;
@@ -10,6 +18,7 @@
       <GpxUpload />
       <LayerControl />
       <PathEditor />
+      <BBoxEditor />
       <ModelControls />
       <button
         class="w-full p-2 bg-blue-600 text-white"

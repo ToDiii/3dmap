@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import { modelConfigStore } from '$lib/stores/modelConfigStore';
   import type { ModelConfig } from '$lib/stores/modelConfigStore';
+  import { bboxStore } from '$lib/stores/bboxStore';
 
   let container: HTMLDivElement;
   let renderer: THREE.WebGLRenderer;
@@ -15,6 +16,7 @@
   let modelGroup: THREE.Group = new THREE.Group();
   let ground: THREE.Object3D | undefined;
   let exportMessage: string | null = null;
+  let bbox: [number, number, number, number] | null = null;
 
   function exportModel(binary = false) {
     const exporter = new GLTFExporter();
@@ -60,7 +62,8 @@
           scale: cfg.scale,
           baseHeight: cfg.baseHeight,
           buildingMultiplier: cfg.buildingHeightMultiplier,
-          elements
+          elements,
+          bbox: bbox || undefined
         })
       });
       const data = await res.json();
@@ -187,12 +190,14 @@
     scene.add(dir);
 
     const unsub = modelConfigStore.subscribe((cfg) => loadModel(cfg));
+    const unsubBBox = bboxStore.subscribe((v) => (bbox = v));
 
     window.addEventListener('resize', onResize);
     animate();
 
     return () => {
       unsub();
+      unsubBBox();
       window.removeEventListener('resize', onResize);
       controls.dispose();
       renderer.dispose();
