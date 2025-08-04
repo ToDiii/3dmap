@@ -18,6 +18,8 @@ Datenquelle: Overpass API (OpenStreetMap)
 3D-Rendering & Export: Three.js
 
 TODO.md
+✔️ Buildfehler durch ungültigen API-Export behoben.
+ 
 Phase 1: Fundament, Karten-Interface & Layer-Management
 
 [x] Projekt-Setup & Basiskonfiguration.
