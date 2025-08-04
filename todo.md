@@ -1,4 +1,4 @@
-TODO: Nachbau von map2model.com
+TODO:
 Dieses Dokument beschreibt die Schritte, um eine Webanwendung zu erstellen. Wir verwenden SvelteKit als Full-Stack-Framework, MapLibre GL JS für die Kartendarstellung, Turf.js für Geodaten-Berechnungen und Three.js für die 3D-Visualisierung und den Export. Alle Daten werden von der OpenStreetMap (OSM) Overpass API bezogen.
 
 Phase 1: Projekt-Setup und Karten-Interface
