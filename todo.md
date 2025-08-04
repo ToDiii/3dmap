@@ -24,6 +24,8 @@ Phase 1: Fundament, Karten-Interface & Layer-Management
 
 [x] Erstellung der README.md.
 
+[x] Erstellung der CHANGELOG.md.
+
 [x] Docker-Setup & Containerisierung.
 
 Initialisiere das SvelteKit-Projekt mit TypeScript und Tailwind CSS wie im ursprünglichen Plan.
