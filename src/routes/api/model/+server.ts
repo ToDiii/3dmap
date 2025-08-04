@@ -39,7 +39,7 @@ function createCacheKey(params: Record<string, any>): string {
   return JSON.stringify(Object.fromEntries(entries));
 }
 
-function buildOverpassQuery(
+export function buildOverpassQuery(
   elements: string[],
   bbox?: [number, number, number, number]
 ): string {
@@ -59,7 +59,7 @@ function buildOverpassQuery(
   return query;
 }
 
-function convertTo3D(data: any, scale: number, baseHeight: number, buildingMultiplier: number) {
+export function convertTo3D(data: any, scale: number, baseHeight: number, buildingMultiplier: number) {
   const features: any[] = [];
   for (const element of data.elements || []) {
     if (element.geometry) {
