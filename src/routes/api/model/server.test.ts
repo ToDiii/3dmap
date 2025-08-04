@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildOverpassQuery, convertTo3D } from './+server';
+import { buildOverpassQuery, convertTo3D } from '../../../lib/server/overpass';
 
 describe('buildOverpassQuery', () => {
   it('builds query with bbox and elements', () => {

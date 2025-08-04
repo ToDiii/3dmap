@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-  import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+  import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
   import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
   import { onMount } from 'svelte';
   import { modelConfigStore } from '$lib/stores/modelConfigStore';
@@ -160,7 +160,7 @@
     for (const type of Object.keys(geoms)) {
       const g = geoms[type];
       if (!g.length) continue;
-      const merged = mergeBufferGeometries(g);
+      const merged = mergeGeometries(g);
       const mesh = new THREE.Mesh(merged, materials[type]);
       modelGroup.add(mesh);
     }
