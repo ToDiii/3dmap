@@ -22,6 +22,8 @@ Phase 1: Fundament, Karten-Interface & Layer-Management
 
 [x] Projekt-Setup & Basiskonfiguration.
 
+[x] Erstellung der README.md.
+
 Initialisiere das SvelteKit-Projekt mit TypeScript und Tailwind CSS wie im ursprünglichen Plan.
 
 Installiere zusätzliche Bibliotheken: npm install gpx-parser-builder maplibre-gl-draw.
