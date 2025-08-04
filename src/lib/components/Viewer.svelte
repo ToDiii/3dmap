@@ -2,6 +2,7 @@
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
   import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+  import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
   import { onMount } from 'svelte';
   import { modelConfigStore } from '$lib/stores/modelConfigStore';
   import type { ModelConfig } from '$lib/stores/modelConfigStore';
@@ -13,6 +14,39 @@
   let controls: OrbitControls;
   let modelGroup: THREE.Group = new THREE.Group();
   let ground: THREE.Object3D | undefined;
+  let exportMessage: string | null = null;
+
+  function exportModel(binary = false) {
+    const exporter = new GLTFExporter();
+    exporter.parse(
+      modelGroup,
+      (result) => {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        let blob: Blob;
+        let filename: string;
+        if (binary) {
+          blob = new Blob([result as ArrayBuffer], {
+            type: 'model/gltf-binary'
+          });
+          filename = `modell_${timestamp}.glb`;
+        } else {
+          const json = JSON.stringify(result, null, 2);
+          blob = new Blob([json], { type: 'model/gltf+json' });
+          filename = `modell_${timestamp}.gltf`;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        exportMessage = `${binary ? 'GLB' : 'GLTF'} exportiert`;
+        setTimeout(() => (exportMessage = null), 2000);
+      },
+      (err) => console.error('export failed', err),
+      { binary }
+    );
+  }
 
   async function loadModel(cfg: ModelConfig) {
     try {
@@ -166,5 +200,26 @@
   });
 </script>
 
-<div bind:this={container} class="w-full h-full"></div>
+<div class="relative w-full h-full">
+  <div bind:this={container} class="w-full h-full"></div>
+  <div class="absolute top-2 left-2 flex gap-2">
+    <button
+      class="px-2 py-1 bg-blue-600 text-white text-sm rounded"
+      on:click={() => exportModel(false)}
+    >
+      GLTF exportieren
+    </button>
+    <button
+      class="px-2 py-1 bg-green-600 text-white text-sm rounded"
+      on:click={() => exportModel(true)}
+    >
+      GLB exportieren
+    </button>
+    {#if exportMessage}
+      <span class="px-2 py-1 text-sm bg-white/80 rounded">
+        {exportMessage}
+      </span>
+    {/if}
+  </div>
+</div>
 

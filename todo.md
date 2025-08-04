@@ -110,6 +110,6 @@ Die Viewer-Komponente bleibt im Kern gleich, lädt aber das nun komplexere Model
 
 Passe die initiale Kameraposition an, um sicherzustellen, dass das gesamte Modell inklusive der neuen Elemente gut sichtbar ist.
 
-[ ] Anpassung der Export-Funktion.
+[x] Anpassung der Export-Funktion.
 
 Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die gesamte Szene, die nun die vom Benutzer ausgewählten und konfigurierten 3D-Elemente enthält. Stelle sicher, dass der Dateiname des Exports den Projektnamen oder das Datum widerspiegelt.
