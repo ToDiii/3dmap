@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Map, LayerControl, GpxUpload, PathEditor } from '$lib';
+  import { Map, LayerControl, GpxUpload, PathEditor, ModelControls } from '$lib';
   import type maplibregl from 'maplibre-gl';
   let map: maplibregl.Map | undefined;
 </script>
@@ -9,6 +9,7 @@
     <GpxUpload />
     <LayerControl />
     <PathEditor />
+    <ModelControls />
   </aside>
   <div class="flex-1">
     <Map bind:map />
