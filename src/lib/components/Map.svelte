@@ -2,6 +2,7 @@
   import maplibregl from 'maplibre-gl';
   import 'maplibre-gl/dist/maplibre-gl.css';
   import { onMount } from 'svelte';
+  import { mapStore } from '$lib/stores/map';
 
   // Allow external binding to map instance for dynamic layer control
   export let map: maplibregl.Map | undefined;
@@ -24,10 +25,16 @@
       zoom
     });
 
+    // expose map instance via store for other components
+    mapStore.set(map);
+
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
     map.addControl(new maplibregl.ScaleControl());
 
-    return () => map?.remove();
+    return () => {
+      mapStore.set(undefined);
+      map?.remove();
+    };
   });
 </script>
 
