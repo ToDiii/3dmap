@@ -18,6 +18,7 @@
   let pathGroup: THREE.Group = new THREE.Group();
   let ground: THREE.Object3D | undefined;
   let exportMessage: string | null = null;
+  let loadError: string | null = null;
   let bbox: [number, number, number, number] | null = null;
   let currentScale = 1;
   let currentBaseHeight = 0;
@@ -94,8 +95,10 @@
       });
       const data = await res.json();
       buildScene(data.features, cfg.baseHeight, cfg.scale);
+      loadError = null;
     } catch (err) {
       console.error('failed to load model', err);
+      loadError = 'Modell konnte nicht geladen werden';
     }
   }
 
@@ -241,23 +244,28 @@
 
 <div class="relative w-full h-full">
   <div bind:this={container} class="w-full h-full"></div>
-  <div class="absolute top-2 left-2 flex gap-2">
-    <button
-      class="px-2 py-1 bg-blue-600 text-white text-sm rounded"
-      on:click={() => exportModel(false)}
-    >
-      GLTF exportieren
-    </button>
-    <button
-      class="px-2 py-1 bg-green-600 text-white text-sm rounded"
-      on:click={() => exportModel(true)}
-    >
-      GLB exportieren
-    </button>
-    {#if exportMessage}
-      <span class="px-2 py-1 text-sm bg-white/80 rounded">
-        {exportMessage}
-      </span>
+  <div class="absolute top-2 left-2 flex flex-col gap-2">
+    <div class="flex gap-2">
+      <button
+        class="px-2 py-1 bg-blue-600 text-white text-sm rounded"
+        on:click={() => exportModel(false)}
+      >
+        GLTF exportieren
+      </button>
+      <button
+        class="px-2 py-1 bg-green-600 text-white text-sm rounded"
+        on:click={() => exportModel(true)}
+      >
+        GLB exportieren
+      </button>
+      {#if exportMessage}
+        <span class="px-2 py-1 text-sm bg-white/80 rounded">
+          {exportMessage}
+        </span>
+      {/if}
+    </div>
+    {#if loadError}
+      <span class="px-2 py-1 text-sm bg-red-600 text-white rounded">{loadError}</span>
     {/if}
   </div>
 </div>

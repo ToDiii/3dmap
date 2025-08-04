@@ -6,65 +6,76 @@
   import { pathStore } from '$lib/stores/pathStore';
 
   let file: File | null = null;
+  let error: string | null = null;
 
   async function handleFileChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
-    file = input.files[0];
-    const text = await file.text();
-    const gpx = GPX.parse(text);
-    if (!gpx || !gpx.trk || gpx.trk.length === 0) return;
-    const track = gpx.trk[0];
-    const coords: [number, number][] = [];
-    track.trkseg?.forEach((seg: any) => {
-      seg.trkpt?.forEach((pt: any) => {
-        const lat = pt.$?.lat;
-        const lon = pt.$?.lon;
-        if (typeof lat === 'number' && typeof lon === 'number') {
-          coords.push([lon, lat]);
-        }
+    error = null;
+    try {
+      const input = event.target as HTMLInputElement;
+      if (!input.files || input.files.length === 0) return;
+      file = input.files[0];
+      const text = await file.text();
+      const gpx = GPX.parse(text);
+      if (!gpx || !gpx.trk || gpx.trk.length === 0) {
+        throw new Error('no track');
+      }
+      const track = gpx.trk[0];
+      const coords: [number, number][] = [];
+      track.trkseg?.forEach((seg: any) => {
+        seg.trkpt?.forEach((pt: any) => {
+          const lat = pt.$?.lat;
+          const lon = pt.$?.lon;
+          if (typeof lat === 'number' && typeof lon === 'number') {
+            coords.push([lon, lat]);
+          }
+        });
       });
-    });
-    if (coords.length === 0) return;
-    const geometry: GeoJSON.LineString = {
-      type: 'LineString',
-      coordinates: coords
-    };
-    const geojson = {
-      type: 'Feature',
-      geometry,
-      properties: {}
-    } as GeoJSON.Feature<GeoJSON.LineString>;
-    pathStore.set(geometry);
+      if (coords.length === 0) {
+        throw new Error('no coords');
+      }
+      const geometry: GeoJSON.LineString = {
+        type: 'LineString',
+        coordinates: coords
+      };
+      const geojson = {
+        type: 'Feature',
+        geometry,
+        properties: {}
+      } as GeoJSON.Feature<GeoJSON.LineString>;
+      pathStore.set(geometry);
 
-    const map = get(mapStore);
-    if (!map) return;
+      const map = get(mapStore);
+      if (!map) return;
 
-    const sourceId = 'gpx-track';
-    const layerId = 'gpx-track-line';
-    const existing = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
-    if (existing) {
-      existing.setData(geojson);
-    } else {
-      map.addSource(sourceId, { type: 'geojson', data: geojson });
+      const sourceId = 'gpx-track';
+      const layerId = 'gpx-track-line';
+      const existing = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
+      if (existing) {
+        existing.setData(geojson);
+      } else {
+        map.addSource(sourceId, { type: 'geojson', data: geojson });
+      }
+      if (!map.getLayer(layerId)) {
+        map.addLayer({
+          id: layerId,
+          type: 'line',
+          source: sourceId,
+          paint: {
+            'line-color': '#ff0000',
+            'line-width': 4
+          }
+        });
+      }
+
+      const bounds = coords.reduce(
+        (b, coord) => b.extend(coord as [number, number]),
+        new maplibregl.LngLatBounds(coords[0], coords[0])
+      );
+      map.fitBounds(bounds, { padding: 20 });
+    } catch (err) {
+      console.error('failed to process GPX', err);
+      error = 'GPX-Datei konnte nicht geladen werden';
     }
-    if (!map.getLayer(layerId)) {
-      map.addLayer({
-        id: layerId,
-        type: 'line',
-        source: sourceId,
-        paint: {
-          'line-color': '#ff0000',
-          'line-width': 4
-        }
-      });
-    }
-
-    const bounds = coords.reduce(
-      (b, coord) => b.extend(coord as [number, number]),
-      new maplibregl.LngLatBounds(coords[0], coords[0])
-    );
-    map.fitBounds(bounds, { padding: 20 });
   }
 </script>
 
@@ -72,6 +83,9 @@
   <input type="file" accept=".gpx" on:change={handleFileChange} />
   {#if file}
     <p class="text-sm">Geladene Datei: {file.name}</p>
+  {/if}
+  {#if error}
+    <p class="text-sm text-red-600">{error}</p>
   {/if}
 </div>
 
