@@ -72,7 +72,7 @@ npx playwright test
 - [Three.js](https://threejs.org/)
 - [Overpass API](https://overpass-api.de/)
 - [Turf.js](https://turfjs.org/)
-- [gpx-parser-builder](https://www.npmjs.com/package/gpx-parser-builder)
+- [@tmcw/togeojson](https://github.com/tmcw/togeojson)
 - [maplibre-gl-draw](https://github.com/maplibre/maplibre-gl-draw)
 - [Vitest](https://vitest.dev/)
 - [Playwright](https://playwright.dev/)
