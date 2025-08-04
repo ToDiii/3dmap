@@ -3,8 +3,12 @@ import type { RequestHandler } from '@sveltejs/kit';
 // simple in-memory cache for requests
 const CACHE = new Map<string, any>();
 
-function buildOverpassQuery(elements: string[], bbox?: number[]): string {
-  const bboxPart = bbox && bbox.length === 4 ? `(${bbox.join(',')})` : '';
+function buildOverpassQuery(
+  elements: string[],
+  bbox?: [number, number, number, number]
+): string {
+  // bbox expected as [south, west, north, east]
+  const bboxPart = bbox ? `(${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]})` : '';
   let query = '[out:json][timeout:25];(';
   if (elements.includes('buildings')) {
     query += `way["building"]${bboxPart};relation["building"]${bboxPart};`;
