@@ -3,6 +3,7 @@
   import maplibregl from 'maplibre-gl';
   import GPX from 'gpx-parser-builder';
   import { mapStore } from '$lib/stores/map';
+  import { pathStore } from '$lib/stores/pathStore';
 
   let file: File | null = null;
 
@@ -25,14 +26,16 @@
       });
     });
     if (coords.length === 0) return;
+    const geometry: GeoJSON.LineString = {
+      type: 'LineString',
+      coordinates: coords
+    };
     const geojson = {
       type: 'Feature',
-      geometry: {
-        type: 'LineString',
-        coordinates: coords
-      },
+      geometry,
       properties: {}
     } as GeoJSON.Feature<GeoJSON.LineString>;
+    pathStore.set(geometry);
 
     const map = get(mapStore);
     if (!map) return;
