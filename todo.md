@@ -36,6 +36,8 @@ Initialisiere das SvelteKit-Projekt mit TypeScript und Tailwind CSS wie im urspr
 
 ✔️ Unterstützung für ES-Module (type="module") aktiviert, um ESM-Bibliotheken zu importieren.
 
+✔️ maplibre-gl-draw läuft nun clientseitig und ist SSR-kompatibel.
+
 [ ] Entwicklung der zentralen Karten-Komponente (Map.svelte).
 
 Initialisiere MapLibre GL JS mit einem flexiblen Vektor-Kartenstil (z.B. von Stadia Maps), der klar definierte Layer für Gebäude, Gewässer, Grünflächen (landuse=grass, natural=wood), Sandflächen (natural=sand) und Straßen enthält.

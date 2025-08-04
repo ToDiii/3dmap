@@ -1,16 +1,27 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import MapboxDraw from 'maplibre-gl-draw';
-  import 'maplibre-gl-draw/dist/mapbox-gl-draw.css';
+  import { browser } from '$app/environment';
+  import type MapboxDraw from 'maplibre-gl-draw';
   import type { Map } from 'maplibre-gl';
   import { mapStore } from '$lib/stores/map';
   import { pathStore } from '$lib/stores/pathStore';
 
+  let Draw: typeof MapboxDraw;
   let draw: MapboxDraw | null = null;
   let map: Map | undefined;
 
+  if (browser) {
+    import('maplibre-gl-draw').then(async (mod) => {
+      Draw = mod.default;
+      await import('maplibre-gl-draw/dist/mapbox-gl-draw.css');
+      if (map && !draw) {
+        initialize(map);
+      }
+    });
+  }
+
   function initialize(m: Map) {
-    draw = new MapboxDraw({
+    draw = new Draw({
       displayControlsDefault: false,
       defaultMode: 'draw_line_string'
     });
@@ -53,7 +64,7 @@
   onMount(() => {
     const unsubscribe = mapStore.subscribe((m) => {
       map = m;
-      if (map && !draw) {
+      if (map && !draw && Draw) {
         initialize(map);
       }
     });
