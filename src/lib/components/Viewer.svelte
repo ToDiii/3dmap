@@ -7,6 +7,7 @@
   import { modelConfigStore } from '$lib/stores/modelConfigStore';
   import type { ModelConfig } from '$lib/stores/modelConfigStore';
   import { bboxStore } from '$lib/stores/bboxStore';
+  import { pathStore } from '$lib/stores/pathStore';
 
   let container: HTMLDivElement;
   let renderer: THREE.WebGLRenderer;
@@ -14,11 +15,36 @@
   let scene: THREE.Scene;
   let controls: OrbitControls;
   let modelGroup: THREE.Group = new THREE.Group();
+  let pathGroup: THREE.Group = new THREE.Group();
   let ground: THREE.Object3D | undefined;
   let exportMessage: string | null = null;
   let bbox: [number, number, number, number] | null = null;
+  let currentScale = 1;
+  let currentBaseHeight = 0;
+  let path: GeoJSON.LineString | null = null;
+
+  function buildPathGeometry(
+    p: GeoJSON.LineString | null,
+    baseHeight: number,
+    scale: number
+  ) {
+    clearGroup(pathGroup);
+    if (!p || p.coordinates.length < 2) return;
+    const pts = p.coordinates.map(
+      ([lon, lat]) => new THREE.Vector3(lon * scale, baseHeight + 0.1, lat * scale)
+    );
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const geom = new THREE.TubeGeometry(curve, Math.max(2, pts.length * 3), 0.5, 8, false);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+    const mesh = new THREE.Mesh(geom, mat);
+    pathGroup.add(mesh);
+    if (!modelGroup.children.includes(pathGroup)) {
+      modelGroup.add(pathGroup);
+    }
+  }
 
   function exportModel(binary = false) {
+    buildPathGeometry(path, currentBaseHeight, currentScale);
     const exporter = new GLTFExporter();
     exporter.parse(
       modelGroup,
@@ -67,7 +93,7 @@
         })
       });
       const data = await res.json();
-      buildScene(data.features, cfg.baseHeight);
+      buildScene(data.features, cfg.baseHeight, cfg.scale);
     } catch (err) {
       console.error('failed to load model', err);
     }
@@ -93,8 +119,10 @@
     type: 'building' | 'road' | 'water';
   }
 
-  function buildScene(features: Feature[], baseHeight: number) {
+  function buildScene(features: Feature[], baseHeight: number, scale: number) {
     clearGroup(modelGroup);
+    currentScale = scale;
+    currentBaseHeight = baseHeight;
     if (ground) {
       scene.remove(ground);
       ground = undefined;
@@ -152,6 +180,7 @@
     grid.position.y = baseHeight;
     ground = grid;
     scene.add(grid);
+    buildPathGeometry(path, baseHeight, scale);
   }
 
   function onResize() {
@@ -191,6 +220,10 @@
 
     const unsub = modelConfigStore.subscribe((cfg) => loadModel(cfg));
     const unsubBBox = bboxStore.subscribe((v) => (bbox = v));
+    const unsubPath = pathStore.subscribe((v) => {
+      path = v;
+      buildPathGeometry(path, currentBaseHeight, currentScale);
+    });
 
     window.addEventListener('resize', onResize);
     animate();
@@ -198,6 +231,7 @@
     return () => {
       unsub();
       unsubBBox();
+      unsubPath();
       window.removeEventListener('resize', onResize);
       controls.dispose();
       renderer.dispose();
