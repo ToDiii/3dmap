@@ -32,9 +32,12 @@ npm run dev
 npx playwright install
 ```
 
-### 🐳 Docker (optional)
-> Hinweis: Eine vollständige Docker-Integration ist möglich (Dockerfile & docker-compose folgen).  
-> Damit kann das Projekt z. B. auf Proxmox, NAS oder VPS gehostet werden.
+### 🐳 Docker
+
+#### Build & Run
+```bash
+docker compose up --build
+```
 
 ### 🧪 Tests
 
