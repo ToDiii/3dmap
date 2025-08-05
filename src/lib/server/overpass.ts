@@ -1,18 +1,25 @@
 export function buildOverpassQuery(
   elements: string[],
-  bbox?: [number, number, number, number]
+  bbox?: [number, number, number, number],
+  shape?: GeoJSON.Polygon
 ): string {
-  // bbox expected as [south, west, north, east]
-  const bboxPart = bbox ? `(${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]})` : '';
+  // area restriction: prefer shape polygon, fallback to bbox
+  const areaPart = shape
+    ? `(poly:"${shape.coordinates[0]
+        .map(([lng, lat]) => `${lat} ${lng}`)
+        .join(' ')}")`
+    : bbox
+    ? `(${bbox[0]},${bbox[1]},${bbox[2]},${bbox[3]})`
+    : '';
   let query = '[out:json][timeout:25];(';
   if (elements.includes('buildings')) {
-    query += `way["building"]${bboxPart};relation["building"]${bboxPart};`;
+    query += `way["building"]${areaPart};relation["building"]${areaPart};`;
   }
   if (elements.includes('roads')) {
-    query += `way["highway"]${bboxPart};`;
+    query += `way["highway"]${areaPart};`;
   }
   if (elements.includes('water')) {
-    query += `way["natural"="water"]${bboxPart};relation["natural"="water"]${bboxPart};`;
+    query += `way["natural"="water"]${areaPart};relation["natural"="water"]${areaPart};`;
   }
   query += ');out geom;';
   return query;

@@ -132,3 +132,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Fix: PathEditor kann gezeichnete Pfade nicht löschen
 [x] Feature: Kreise als Auswahlfläche
 [x] Feature: Logging und Feedback, wenn keine OSM-Daten geladen werden
+[x] Feature: Shape-Selector für Rechtecke und Kreise
