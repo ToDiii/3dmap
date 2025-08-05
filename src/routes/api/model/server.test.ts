@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildOverpassQuery } from '../../../lib/server/overpass';
 import { parsePolygon } from '../../../lib/server/polygon';
-import { convertTo3D } from '../../../lib/utils/convertTo3D';
+import { convertTo3D, type Feature } from '../../../lib/utils/convertTo3D';
 import * as THREE from 'three';
 
 describe('parsePolygon', () => {
@@ -31,10 +31,11 @@ describe('parsePolygon', () => {
 
 describe('buildOverpassQuery', () => {
   it('builds query with bbox and elements', () => {
-    const query = buildOverpassQuery(['buildings', 'roads', 'water'], [1, 2, 3, 4]);
+    const query = buildOverpassQuery(['buildings', 'roads', 'water', 'green'], [1, 2, 3, 4]);
     expect(query).toContain('way["building"](1,2,3,4);relation["building"](1,2,3,4);');
     expect(query).toContain('way["highway"](1,2,3,4);');
     expect(query).toContain('way["natural"="water"](1,2,3,4);relation["natural"="water"](1,2,3,4);');
+    expect(query).toContain('way["leisure"="park"](1,2,3,4);');
     expect(query.trim().endsWith('out geom;')).toBe(true);
   });
 
@@ -56,7 +57,7 @@ describe('buildOverpassQuery', () => {
 
 describe('convertTo3D', () => {
   it('creates extruded meshes from features', () => {
-    const features = [
+    const features: Feature[] = [
       {
         geometry: [
           [0, 0, 0],

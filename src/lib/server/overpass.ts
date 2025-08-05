@@ -21,14 +21,27 @@ export function buildOverpassQuery(
   if (elements.includes('water')) {
     query += `way["natural"="water"]${areaPart};relation["natural"="water"]${areaPart};`;
   }
+  if (elements.includes('green')) {
+    query += `way["leisure"="park"]${areaPart};relation["leisure"="park"]${areaPart};way["landuse"="grass"]${areaPart};relation["landuse"="grass"]${areaPart};`;
+  }
   query += ');out geom;';
   return query;
 }
 
-export function convertTo3D(data: any, scale: number, baseHeight: number, buildingMultiplier: number) {
+export function convertTo3D(
+  data: any,
+  scale: number,
+  baseHeight: number,
+  buildingMultiplier: number,
+  minArea = 0
+) {
   const features: any[] = [];
   for (const element of data.elements || []) {
     if (element.geometry) {
+      if (minArea > 0 && element.tags?.building) {
+        const area = polygonArea(element.geometry);
+        if (area < minArea) continue;
+      }
       const coords = element.geometry.map((p: any) => [p.lon * scale, baseHeight, p.lat * scale]);
       let height = 0;
       if (element.tags?.height) {
@@ -42,7 +55,15 @@ export function convertTo3D(data: any, scale: number, baseHeight: number, buildi
       }
       features.push({
         id: element.id,
-        type: element.tags?.building ? 'building' : element.tags?.highway ? 'road' : 'water',
+        type: element.tags?.building
+          ? 'building'
+          : element.tags?.highway
+          ? 'road'
+          : element.tags?.natural === 'water'
+          ? 'water'
+          : element.tags?.leisure === 'park' || element.tags?.landuse === 'grass'
+          ? 'green'
+          : 'other',
         geometry: coords,
         height
       });
@@ -52,3 +73,18 @@ export function convertTo3D(data: any, scale: number, baseHeight: number, buildi
 }
 
 export type ModelResult = ReturnType<typeof convertTo3D>;
+
+function polygonArea(geometry: { lat: number; lon: number }[]): number {
+  const R = 6378137;
+  let area = 0;
+  for (let i = 0, len = geometry.length; i < len; i++) {
+    const p1 = geometry[i];
+    const p2 = geometry[(i + 1) % len];
+    const lon1 = (p1.lon * Math.PI) / 180;
+    const lon2 = (p2.lon * Math.PI) / 180;
+    const lat1 = (p1.lat * Math.PI) / 180;
+    const lat2 = (p2.lat * Math.PI) / 180;
+    area += (lon2 - lon1) * (2 + Math.sin(lat1) + Math.sin(lat2));
+  }
+  return Math.abs((area * R * R) / 2);
+}

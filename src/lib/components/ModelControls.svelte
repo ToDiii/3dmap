@@ -6,19 +6,23 @@
 
   let scale = 500;
   let baseHeight = 0;
-  let buildingHeightMultiplier = 1;
+  let buildingMultiplier = 1;
   let elements = {
     buildings: true,
     roads: true,
     water: true,
     green: true
   };
+  let excludeSmallBuildings = false;
+  let minBuildingArea = 50;
 
   const unsubscribe = modelConfigStore.subscribe((value) => {
     scale = value.scale;
     baseHeight = value.baseHeight;
-    buildingHeightMultiplier = value.buildingHeightMultiplier;
+    buildingMultiplier = value.buildingMultiplier;
     elements = { ...value.elements };
+    excludeSmallBuildings = value.excludeSmallBuildings;
+    minBuildingArea = value.minBuildingArea;
   });
 
   onDestroy(unsubscribe);
@@ -27,15 +31,17 @@
     modelConfigStore.set({
       scale,
       baseHeight,
-      buildingHeightMultiplier,
-      elements: { ...elements }
+      buildingMultiplier,
+      elements: { ...elements },
+      excludeSmallBuildings,
+      minBuildingArea
     });
   }
 </script>
 
 <div class="space-y-4">
   <div>
-    <label class="block text-sm font-medium mb-1" for="scaleSelect">Maßstab</label>
+    <label class="block text-sm font-medium mb-1" for="scaleSelect" title="Maßstab des Modells">Maßstab</label>
     <select
       id="scaleSelect"
       class="w-full border p-1"
@@ -49,7 +55,7 @@
   </div>
 
   <div>
-    <label class="block text-sm font-medium mb-1" for="baseHeight">Basishöhe (m)</label>
+    <label class="block text-sm font-medium mb-1" for="baseHeight" title="Versenkt oder hebt das Modell an">Basishöhe (m)</label>
     <input
       id="baseHeight"
       type="number"
@@ -65,16 +71,17 @@
     <label
       class="block text-sm font-medium mb-1"
       for="heightMultiplier"
-      >Gebäudehöhe-Multiplikator: {buildingHeightMultiplier}</label
+      title="Skaliert die Gebäudehöhen"
+      >Gebäudehöhe-Multiplikator: {buildingMultiplier.toFixed(1)}x</label
     >
     <input
       id="heightMultiplier"
       type="range"
       min="0.5"
-      max="3"
+      max="5"
       step="0.1"
       class="w-full"
-      bind:value={buildingHeightMultiplier}
+      bind:value={buildingMultiplier}
       on:input={updateStore}
     />
   </div>
@@ -113,6 +120,22 @@
           on:change={updateStore}
         />
         <span>Grünflächen</span>
+      </label>
+      <label class="flex items-center space-x-2" title="Blendet kleine Gebäude aus">
+        <input
+          type="checkbox"
+          bind:checked={excludeSmallBuildings}
+          on:change={updateStore}
+        />
+        <span>Gebäude unter</span>
+        <input
+          type="number"
+          class="w-16 border p-1 text-xs"
+          min="0"
+          bind:value={minBuildingArea}
+          on:input={updateStore}
+        />
+        <span>m² ausschließen</span>
       </label>
     </div>
   </fieldset>

@@ -85,6 +85,7 @@ export const POST: RequestHandler = async ({ request }) => {
     scale,
     baseHeight = 0,
     buildingMultiplier = 1,
+    minArea = 0,
     elements,
     bbox,
     shape,
@@ -104,6 +105,7 @@ export const POST: RequestHandler = async ({ request }) => {
     scale,
     baseHeight,
     buildingMultiplier,
+    minArea,
     elements,
     bbox,
     shape: polygon
@@ -137,7 +139,7 @@ export const POST: RequestHandler = async ({ request }) => {
     });
   }
 
-  const result = convertTo3D(osmData, scale, baseHeight, buildingMultiplier);
+  const result = convertTo3D(osmData, scale, baseHeight, buildingMultiplier, minArea);
   CACHE.set(cacheKey, result);
   saveCache();
   return new Response(JSON.stringify(result), {

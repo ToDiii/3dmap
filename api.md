@@ -10,7 +10,8 @@ Generates simplified 3D geometry from OpenStreetMap data.
   "scale": number,
   "baseHeight": number,             // optional (default 0)
   "buildingMultiplier": number,     // optional (default 1)
-  "elements": ["buildings", "roads", "water"],
+  "minArea": number,                // optional (default 0)
+  "elements": ["buildings", "roads", "water", "green"],
   "bbox": [south, west, north, east] // optional bounding box
 }
 ```
@@ -21,7 +22,7 @@ Generates simplified 3D geometry from OpenStreetMap data.
   "features": [
     {
       "id": number,
-      "type": "building" | "road" | "water",
+      "type": "building" | "road" | "water" | "green",
       "geometry": [ [x, y, z], ... ],
       "height": number
     }

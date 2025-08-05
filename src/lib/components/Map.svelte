@@ -99,7 +99,8 @@
           elements: ['buildings'],
           scale: 1,
           baseHeight: cfg.baseHeight,
-          buildingMultiplier: cfg.buildingHeightMultiplier,
+          buildingMultiplier: cfg.buildingMultiplier,
+          minArea: cfg.excludeSmallBuildings ? cfg.minBuildingArea : undefined,
           bbox
         })
       });
@@ -150,7 +151,7 @@
           renderer.render(scene, camera);
         }
       };
-      map!.addLayer(customLayer);
+      map!.addLayer(customLayer as any);
       layerReady = true;
       loadBuildings(get(shapeStore));
     });
@@ -160,9 +161,15 @@
       if (fetchTimer) clearTimeout(fetchTimer);
       fetchTimer = setTimeout(() => loadBuildings(shape), 300);
     });
+    const unsubCfg = modelConfigStore.subscribe(() => {
+      if (!layerReady) return;
+      if (fetchTimer) clearTimeout(fetchTimer);
+      fetchTimer = setTimeout(() => loadBuildings(get(shapeStore)), 300);
+    });
 
     return () => {
       unsubShape();
+      unsubCfg();
       mapStore.set(undefined);
       extrudeGroupStore.set(null);
       map?.remove();
