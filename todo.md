@@ -116,7 +116,7 @@ Wende die Basishöhe und den Gebäudehöhe-Multiplikator wie in Phase 3 definier
 
 Stelle weiterhin sicher, dass alle Geometrien für eine maximale Performance zu einem einzigen Mesh zusammengefügt werden, bevor die Daten an den Client gesendet werden.
 
-[ ] Optimierung der 3D-Visualisierung (Viewer.svelte).
+[x] Optimierung der 3D-Visualisierung (Viewer.svelte).
 
 Die Viewer-Komponente bleibt im Kern gleich, lädt aber das nun komplexere Modell.
 

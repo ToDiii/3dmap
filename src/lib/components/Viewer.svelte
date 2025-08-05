@@ -1,15 +1,12 @@
 <script lang="ts">
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-  import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
   import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
   import { onMount } from 'svelte';
   import { modelConfigStore } from '$lib/stores/modelConfigStore';
-  import type { ModelConfig } from '$lib/stores/modelConfigStore';
-  import { bboxStore } from '$lib/stores/bboxStore';
   import { pathStore } from '$lib/stores/pathStore';
-  import { shapeStore } from '$lib/stores/shapeStore';
-  import { get } from 'svelte/store';
+  import { modelStore, modelLoading, modelError } from '$lib/stores/modelStore';
+  import type { MeshFeature } from '$lib/utils/convertTo3D';
 
   let container: HTMLDivElement;
   let renderer: THREE.WebGLRenderer;
@@ -21,12 +18,10 @@
   let ground: THREE.Object3D | undefined;
   let exportMessage: string | null = null;
   let loadError: string | null = null;
-  let bbox: [number, number, number, number] | null = null;
   let currentScale = 1;
   let currentBaseHeight = 0;
   let path: GeoJSON.LineString | null = null;
-  let shape: GeoJSON.Polygon | null = null;
-  let debugInfo: any = null;
+  let isLoading = false;
 
   function buildPathGeometry(
     p: GeoJSON.LineString | null,
@@ -81,33 +76,6 @@
     );
   }
 
-  async function loadModel(cfg: ModelConfig) {
-    try {
-      const elements = Object.entries(cfg.elements)
-        .filter(([, v]) => v)
-        .map(([k]) => k);
-      const res = await fetch('/api/model', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          scale: cfg.scale,
-          baseHeight: cfg.baseHeight,
-          buildingMultiplier: cfg.buildingHeightMultiplier,
-          elements,
-          bbox: shape ? undefined : bbox || undefined,
-          shape: shape || undefined
-        })
-      });
-      const data = await res.json();
-      console.log('BBox:', bbox, 'Shape:', shape, 'API Response:', data);
-      debugInfo = { bbox, shape, response: data };
-      loadError = buildScene(data.features, cfg.baseHeight, cfg.scale);
-    } catch (err) {
-      console.error('failed to load model', err);
-      loadError = 'Modell konnte nicht geladen werden';
-    }
-  }
-
   function clearGroup(group: THREE.Group) {
     group.traverse((obj: THREE.Object3D) => {
       if (obj instanceof THREE.Mesh) {
@@ -122,17 +90,13 @@
     group.clear();
   }
 
-  interface Feature {
-    geometry: [number, number, number][];
-    height: number;
-    type: 'building' | 'road' | 'water';
-  }
+  const materials: Record<string, THREE.Material> = {
+    building: new THREE.MeshStandardMaterial({ color: 0xff0000 }),
+    road: new THREE.MeshStandardMaterial({ color: 0x808080 }),
+    water: new THREE.MeshStandardMaterial({ color: 0x3399ff })
+  };
 
-  function buildScene(
-    features: Feature[],
-    baseHeight: number,
-    scale: number
-  ): string | null {
+  function updateScene(meshes: MeshFeature[], baseHeight: number, scale: number) {
     clearGroup(modelGroup);
     currentScale = scale;
     currentBaseHeight = baseHeight;
@@ -140,51 +104,14 @@
       scene.remove(ground);
       ground = undefined;
     }
-
-    if (!features || features.length === 0) {
-      return 'Keine Features geladen';
+    if (!meshes || meshes.length === 0) {
+      loadError = 'Keine Features geladen';
+      return;
     }
-
-    const geoms: Record<string, THREE.BufferGeometry[]> = {
-      building: [],
-      road: [],
-      water: []
-    };
-
-    for (const f of features) {
-      const pts = f.geometry.map(([x, _y, z]) => new THREE.Vector2(x, z));
-      if (pts.length < 3) continue;
-      if (!pts[0].equals(pts[pts.length - 1])) pts.push(pts[0]);
-      const shape = new THREE.Shape(pts);
-      const geom = new THREE.ExtrudeGeometry(shape, {
-        depth: f.height || 0.1,
-        bevelEnabled: false
-      });
-      geom.rotateX(-Math.PI / 2);
-      geom.translate(0, baseHeight, 0);
-      geoms[f.type]?.push(geom);
-    }
-
-    const materials: Record<string, THREE.Material> = {
-      building: new THREE.MeshStandardMaterial({ color: 0xb0b0b0 }),
-      road: new THREE.MeshStandardMaterial({ color: 0x666666 }),
-      water: new THREE.MeshStandardMaterial({ color: 0x3399ff })
-    };
-
-    let added = 0;
-    for (const type of Object.keys(geoms)) {
-      const g = geoms[type];
-      if (!g.length) continue;
-      const merged = mergeGeometries(g);
-      const mesh = new THREE.Mesh(merged, materials[type]);
+    for (const { mesh, type } of meshes) {
+      mesh.material = materials[type];
       modelGroup.add(mesh);
-      added += g.length;
     }
-
-    if (added === 0) {
-      return 'Features vorhanden, aber leer';
-    }
-
     const box = new THREE.Box3().setFromObject(modelGroup);
     const size = box.getSize(new THREE.Vector3()).length();
     const sphere = box.getBoundingSphere(new THREE.Sphere());
@@ -197,14 +124,13 @@
       controls.target.copy(sphere.center);
       controls.update();
     }
-
     const gridSize = size || 100;
     const grid = new THREE.GridHelper(gridSize, 20);
     grid.position.y = baseHeight;
     ground = grid;
     scene.add(grid);
     buildPathGeometry(path, baseHeight, scale);
-    return null;
+    loadError = null;
   }
 
   function onResize() {
@@ -242,15 +168,15 @@
     dir.position.set(50, 100, 50);
     scene.add(dir);
 
-    const unsub = modelConfigStore.subscribe((cfg) => loadModel(cfg));
-    const unsubBBox = bboxStore.subscribe((v) => {
-      bbox = v;
-      loadModel(get(modelConfigStore));
+    const unsubCfg = modelConfigStore.subscribe((cfg) => {
+      currentScale = cfg.scale;
+      currentBaseHeight = cfg.baseHeight;
     });
-    const unsubShape = shapeStore.subscribe((v) => {
-      shape = v;
-      loadModel(get(modelConfigStore));
+    const unsubModel = modelStore.subscribe((meshes) => {
+      updateScene(meshes, currentBaseHeight, currentScale);
     });
+    const unsubLoading = modelLoading.subscribe((v) => (isLoading = v));
+    const unsubError = modelError.subscribe((v) => (loadError = v));
     const unsubPath = pathStore.subscribe((v) => {
       path = v;
       buildPathGeometry(path, currentBaseHeight, currentScale);
@@ -260,9 +186,10 @@
     animate();
 
     return () => {
-      unsub();
-      unsubBBox();
-      unsubShape();
+      unsubCfg();
+      unsubModel();
+      unsubLoading();
+      unsubError();
       unsubPath();
       window.removeEventListener('resize', onResize);
       controls.dispose();
@@ -273,6 +200,11 @@
 
 <div class="relative w-full h-full">
   <div bind:this={container} class="w-full h-full"></div>
+  {#if isLoading}
+    <div class="absolute inset-0 flex items-center justify-center">
+      <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  {/if}
   <div class="absolute top-2 left-2 flex flex-col gap-2">
     <div class="flex gap-2">
       <button
@@ -295,19 +227,6 @@
     </div>
     {#if loadError}
       <span class="px-2 py-1 text-sm bg-red-600 text-white rounded">{loadError}</span>
-    {/if}
-    {#if debugInfo}
-      <pre class="px-2 py-1 text-xs bg-white/80 rounded max-w-xs overflow-auto">
-{JSON.stringify(
-  {
-    bbox: debugInfo.bbox,
-    shape: debugInfo.shape,
-    features: debugInfo.response?.features?.length
-  },
-  null,
-  2
-)}
-      </pre>
     {/if}
   </div>
 </div>
