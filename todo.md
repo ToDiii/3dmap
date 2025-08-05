@@ -134,3 +134,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: Logging und Feedback, wenn keine OSM-Daten geladen werden
 [x] Feature: Shape-Selector für Rechtecke und Kreise
 [x] Feature: Overpass-Abfrage für gezeichnete Polygone
+[x] Feature: STL-Export
