@@ -14,6 +14,16 @@ describe('buildOverpassQuery', () => {
     const query = buildOverpassQuery(['roads']);
     expect(query).toBe('[out:json][timeout:25];(way["highway"];);out geom;');
   });
+
+  it('builds query with polygon shape', () => {
+    const shape: GeoJSON.Polygon = {
+      type: 'Polygon',
+      coordinates: [[[1, 1], [2, 1], [2, 2], [1, 2], [1, 1]]]
+    };
+    const query = buildOverpassQuery(['buildings'], undefined, shape);
+    expect(query).toContain('poly:"1 1 1 2 2 2 2 1 1 1"');
+    expect(query).toContain('way["building"]');
+  });
 });
 
 describe('convertTo3D', () => {

@@ -34,6 +34,9 @@ function createCacheKey(params: Record<string, any>): string {
     if (Array.isArray(value)) {
       return [key, [...value].sort()];
     }
+    if (typeof value === 'object' && value !== null) {
+      return [key, JSON.stringify(value)];
+    }
     return [key, value];
   });
   entries.sort(([a], [b]) => a.localeCompare(b));
@@ -55,6 +58,7 @@ export const POST: RequestHandler = async ({ request }) => {
     buildingMultiplier = 1,
     elements,
     bbox,
+    shape,
     invalidate = false
   } = payload || {};
 
@@ -62,7 +66,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Missing required parameters' }), { status: 400 });
   }
 
-  const cacheKey = createCacheKey({ scale, baseHeight, buildingMultiplier, elements, bbox });
+  const cacheKey = createCacheKey({ scale, baseHeight, buildingMultiplier, elements, bbox, shape });
 
   if (invalidate) {
     CACHE.delete(cacheKey);
@@ -73,8 +77,8 @@ export const POST: RequestHandler = async ({ request }) => {
     });
   }
 
-  const query = buildOverpassQuery(elements, bbox);
-  console.log('Overpass query', { bbox, query });
+  const query = buildOverpassQuery(elements, bbox, shape);
+  console.log('Overpass query', { bbox, shape, query });
   let osmData;
   try {
     const resp = await fetch('https://overpass-api.de/api/interpreter', {

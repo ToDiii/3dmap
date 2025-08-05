@@ -6,7 +6,8 @@
     PathEditor,
     ModelControls,
     Viewer,
-    BBoxEditor
+    BBoxEditor,
+    ShapeSelector
   } from '$lib';
   import type maplibregl from 'maplibre-gl';
   let map: maplibregl.Map | undefined;
@@ -19,6 +20,7 @@
       <LayerControl />
       <PathEditor />
       <BBoxEditor />
+      <ShapeSelector />
       <ModelControls />
       <button
         class="w-full p-2 bg-blue-600 text-white"

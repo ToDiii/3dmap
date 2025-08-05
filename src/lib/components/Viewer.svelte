@@ -8,6 +8,7 @@
   import type { ModelConfig } from '$lib/stores/modelConfigStore';
   import { bboxStore } from '$lib/stores/bboxStore';
   import { pathStore } from '$lib/stores/pathStore';
+  import { shapeStore } from '$lib/stores/shapeStore';
   import { get } from 'svelte/store';
 
   let container: HTMLDivElement;
@@ -24,6 +25,7 @@
   let currentScale = 1;
   let currentBaseHeight = 0;
   let path: GeoJSON.LineString | null = null;
+  let shape: GeoJSON.Polygon | null = null;
   let debugInfo: any = null;
 
   function buildPathGeometry(
@@ -92,12 +94,13 @@
           baseHeight: cfg.baseHeight,
           buildingMultiplier: cfg.buildingHeightMultiplier,
           elements,
-          bbox: bbox || undefined
+          bbox: shape ? undefined : bbox || undefined,
+          shape: shape || undefined
         })
       });
       const data = await res.json();
-      console.log('BBox:', bbox, 'API Response:', data);
-      debugInfo = { bbox, response: data };
+      console.log('BBox:', bbox, 'Shape:', shape, 'API Response:', data);
+      debugInfo = { bbox, shape, response: data };
       loadError = buildScene(data.features, cfg.baseHeight, cfg.scale);
     } catch (err) {
       console.error('failed to load model', err);
@@ -244,6 +247,10 @@
       bbox = v;
       loadModel(get(modelConfigStore));
     });
+    const unsubShape = shapeStore.subscribe((v) => {
+      shape = v;
+      loadModel(get(modelConfigStore));
+    });
     const unsubPath = pathStore.subscribe((v) => {
       path = v;
       buildPathGeometry(path, currentBaseHeight, currentScale);
@@ -255,6 +262,7 @@
     return () => {
       unsub();
       unsubBBox();
+      unsubShape();
       unsubPath();
       window.removeEventListener('resize', onResize);
       controls.dispose();
@@ -290,7 +298,15 @@
     {/if}
     {#if debugInfo}
       <pre class="px-2 py-1 text-xs bg-white/80 rounded max-w-xs overflow-auto">
-{JSON.stringify({ bbox: debugInfo.bbox, features: debugInfo.response?.features?.length }, null, 2)}
+{JSON.stringify(
+  {
+    bbox: debugInfo.bbox,
+    shape: debugInfo.shape,
+    features: debugInfo.response?.features?.length
+  },
+  null,
+  2
+)}
       </pre>
     {/if}
   </div>
