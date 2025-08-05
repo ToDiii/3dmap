@@ -137,3 +137,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: STL-Export
 [x] Feature: Gebäudeextrusion auf der Karte
 [x] Feature: Export der Kartenextrusion als STL/3MF
+[x] Feature: Projekt-Zwischenspeicherung als JSON-Datei
