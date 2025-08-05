@@ -1,5 +1,31 @@
 import { describe, it, expect } from 'vitest';
 import { buildOverpassQuery, convertTo3D } from '../../../lib/server/overpass';
+import { parsePolygon } from '../../../lib/server/polygon';
+
+describe('parsePolygon', () => {
+  it('accepts GeoJSON polygon', () => {
+    const poly: GeoJSON.Polygon = {
+      type: 'Polygon',
+      coordinates: [[[1, 1], [2, 1], [2, 2], [1, 2], [1, 1]]]
+    };
+    expect(parsePolygon(poly)).toEqual(poly);
+  });
+
+  it('accepts coordinate array and closes polygon', () => {
+    const coords = [
+      [1, 1],
+      [2, 1],
+      [2, 2],
+      [1, 2]
+    ];
+    const parsed = parsePolygon(coords);
+    expect(parsed?.coordinates[0]).toEqual([...coords, coords[0]]);
+  });
+
+  it('rejects invalid polygon', () => {
+    expect(parsePolygon([[1, 1], [2, 2], [3, 3]])).toBeNull();
+  });
+});
 
 describe('buildOverpassQuery', () => {
   it('builds query with bbox and elements', () => {
