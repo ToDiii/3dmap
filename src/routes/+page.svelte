@@ -7,7 +7,8 @@
     ModelControls,
     Viewer,
     BBoxEditor,
-    ShapeSelector
+    ShapeSelector,
+    MapExport
   } from '$lib';
   import type maplibregl from 'maplibre-gl';
   let map: maplibregl.Map | undefined;
@@ -22,6 +23,7 @@
       <BBoxEditor />
       <ShapeSelector />
       <ModelControls />
+      <MapExport />
       <button
         class="w-full p-2 bg-blue-600 text-white"
         on:click={() => (showViewer = !showViewer)}

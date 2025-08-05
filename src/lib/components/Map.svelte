@@ -5,6 +5,7 @@
   import { mapStore } from '$lib/stores/map';
   import { shapeStore } from '$lib/stores/shapeStore';
   import { modelConfigStore } from '$lib/stores/modelConfigStore';
+  import { extrudeGroupStore } from '$lib/stores/extrudeGroupStore';
   import { get } from 'svelte/store';
   import * as THREE from 'three';
 
@@ -21,6 +22,7 @@
 
   let mapContainer: HTMLDivElement;
   let extrudeGroup: THREE.Group = new THREE.Group();
+  extrudeGroupStore.set(extrudeGroup);
   let fetchTimer: ReturnType<typeof setTimeout> | null = null;
   let layerReady = false;
 
@@ -162,6 +164,7 @@
     return () => {
       unsubShape();
       mapStore.set(undefined);
+      extrudeGroupStore.set(null);
       map?.remove();
     };
   });

@@ -136,3 +136,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: Overpass-Abfrage für gezeichnete Polygone
 [x] Feature: STL-Export
 [x] Feature: Gebäudeextrusion auf der Karte
+[x] Feature: Export der Kartenextrusion als STL/3MF
