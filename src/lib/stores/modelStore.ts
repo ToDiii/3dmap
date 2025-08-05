@@ -24,7 +24,8 @@ async function loadModel() {
       body: JSON.stringify({
         scale: cfg.scale,
         baseHeight: cfg.baseHeight,
-        buildingMultiplier: cfg.buildingHeightMultiplier,
+        buildingMultiplier: cfg.buildingMultiplier,
+        minArea: cfg.excludeSmallBuildings ? cfg.minBuildingArea : undefined,
         elements,
         bbox: shape ? undefined : bbox || undefined,
         shape: shape || undefined

@@ -4,7 +4,7 @@ export type SimplePolygon = [number, number, number][];
 export interface Feature {
   geometry: SimplePolygon | SimplePolygon[];
   height: number;
-  type: 'building' | 'road' | 'water';
+  type: 'building' | 'road' | 'water' | 'green' | 'other';
 }
 
 export interface MeshFeature {
@@ -24,6 +24,7 @@ export function convertTo3D(features: Feature[], baseHeight: number): MeshFeatur
   for (const f of features) {
     const polys = toPolygons(f.geometry);
     for (const poly of polys) {
+      if (f.type === 'other') continue;
       const pts = poly.map(([x, _y, z]) => new THREE.Vector2(x, z));
       if (pts.length < 3) continue;
       if (!pts[0].equals(pts[pts.length - 1])) pts.push(pts[0]);

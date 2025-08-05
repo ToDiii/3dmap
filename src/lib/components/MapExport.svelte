@@ -29,7 +29,8 @@
     }
     const exporter = new STLExporter();
     const result = exporter.parse(group, { binary: true }) as DataView;
-    const blob = new Blob([result.buffer], { type: 'model/stl' });
+    const buffer = result.buffer as ArrayBuffer;
+    const blob = new Blob([buffer], { type: 'model/stl' });
     downloadBlob(blob, 'stl');
   }
 

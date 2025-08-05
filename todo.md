@@ -86,7 +86,7 @@ Die Koordinaten des gezeichneten Pfades werden reaktiv in einem Svelte Store ges
 
 Phase 3: Erweiterte 3D-Generierung & API
 
-[ ] Erweiterung des UI für 3D-Modellierungsoptionen (ModelControls.svelte).
+[x] Erweiterung des UI für 3D-Modellierungsoptionen (ModelControls.svelte).
 
 Implementiere UI-Elemente für die folgenden Parameter:
 
