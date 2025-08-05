@@ -17,6 +17,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Viewer rendert Modelle aus dem `modelStore` mit farbigen Materialien
 - Export von Modellen als GLTF, GLB und STL mit Dateinamenvorschlag und Nutzerfeedback
 - Gebäudeextrusionen direkt auf der Karte
+- Export der Kartenextrusion als STL oder 3MF
 
 ---
 
