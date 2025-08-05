@@ -16,7 +16,7 @@ export interface ModelConfig {
   minBuildingArea: number;
 }
 
-export const modelConfigStore = writable<ModelConfig>({
+const defaultConfig: ModelConfig = {
   scale: 500,
   baseHeight: 0,
   buildingMultiplier: 1,
@@ -28,4 +28,16 @@ export const modelConfigStore = writable<ModelConfig>({
   },
   excludeSmallBuildings: false,
   minBuildingArea: 50
-});
+};
+
+function createModelConfigStore() {
+  const { subscribe, set, update } = writable<ModelConfig>(defaultConfig);
+  return {
+    subscribe,
+    set,
+    update,
+    reset: () => set(defaultConfig)
+  };
+}
+
+export const modelConfigStore = createModelConfigStore();

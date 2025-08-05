@@ -20,6 +20,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Export der Kartenextrusion als STL oder 3MF
 - Erweiterte ModelControls für Basishöhe, Gebäudehöhen-Multiplikator bis 5x und Layer-Filter mit Flächenlimit
 - Lokale Projekt-Zwischenspeicherung als `.3dmap.json` (Export & Import)
+- Projekt-Reset-Funktion zum Leeren aller Projekt-Stores
 
 ---
 

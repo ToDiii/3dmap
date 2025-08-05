@@ -2,6 +2,8 @@ import { get } from 'svelte/store';
 import { modelConfigStore } from '$lib/stores/modelConfigStore';
 import { pathStore } from '$lib/stores/pathStore';
 import { bboxStore } from '$lib/stores/bboxStore';
+import { mapStore } from '$lib/stores/map';
+import { extrudeGroupStore } from '$lib/stores/extrudeGroupStore';
 
 /**
  * Export current project state as a `.3dmap.json` file.
@@ -44,6 +46,32 @@ export async function importProject(file: File) {
     bboxStore.set(data.bboxStore);
   } else {
     bboxStore.set(null);
+  }
+}
+
+/**
+ * Reset all project related stores and map state.
+ */
+export function resetProject() {
+  pathStore.set(null);
+  bboxStore.set(null);
+  modelConfigStore.reset();
+  extrudeGroupStore.set(null);
+
+  const map = get(mapStore);
+  // remove any layers or sources added to the map
+  if (map) {
+    // attempt to remove all custom sources/layers except defaults
+    const layers = map.getStyle()?.layers?.map((l) => l.id) || [];
+    for (const id of layers) {
+      if (id !== 'extruded-buildings') continue;
+      if (map.getLayer(id)) map.removeLayer(id);
+    }
+    const sources = Object.keys(map.getStyle()?.sources || {});
+    for (const id of sources) {
+      if (id === 'extruded-buildings') continue;
+      if (map.getSource(id)) map.removeSource(id);
+    }
   }
 }
 
