@@ -12,6 +12,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 ### Added
 - ShapeSelector zum Zeichnen von Rechtecken und Kreisen auf der Karte
 - API-Unterstützung für Shapes beim Modellabruf
+- Overpass-Abfragen für gezeichnete Polygone
 
 ---
 

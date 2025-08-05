@@ -2,6 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { buildOverpassQuery, convertTo3D } from '$lib/server/overpass';
+import { parsePolygon } from '$lib/server/polygon';
 
 // persistent cache stored on disk
 const CACHE_FILE = join(process.cwd(), 'model-cache.json');
@@ -43,6 +44,34 @@ function createCacheKey(params: Record<string, any>): string {
   return JSON.stringify(Object.fromEntries(entries));
 }
 
+async function fetchOverpass(query: string): Promise<any> {
+  const urls = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter'
+  ];
+  let lastError: any;
+  for (const url of urls) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25_000);
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        body: query,
+        signal: controller.signal
+      });
+      if (!resp.ok) {
+        throw new Error(`Overpass API error: ${resp.status}`);
+      }
+      return await resp.json();
+    } catch (err) {
+      lastError = err;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  throw lastError;
+}
+
 
 export const POST: RequestHandler = async ({ request }) => {
   let payload;
@@ -66,7 +95,19 @@ export const POST: RequestHandler = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Missing required parameters' }), { status: 400 });
   }
 
-  const cacheKey = createCacheKey({ scale, baseHeight, buildingMultiplier, elements, bbox, shape });
+  const polygon = parsePolygon(shape);
+  if (shape && !polygon) {
+    return new Response(JSON.stringify({ error: 'Invalid polygon' }), { status: 400 });
+  }
+
+  const cacheKey = createCacheKey({
+    scale,
+    baseHeight,
+    buildingMultiplier,
+    elements,
+    bbox,
+    shape: polygon
+  });
 
   if (invalidate) {
     CACHE.delete(cacheKey);
@@ -77,18 +118,11 @@ export const POST: RequestHandler = async ({ request }) => {
     });
   }
 
-  const query = buildOverpassQuery(elements, bbox, shape);
-  console.log('Overpass query', { bbox, shape, query });
+  const query = buildOverpassQuery(elements, bbox, polygon ?? undefined);
+  console.log('Overpass query', { bbox, shape: polygon, query });
   let osmData;
   try {
-    const resp = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      body: query
-    });
-    if (!resp.ok) {
-      throw new Error(`Overpass API error: ${resp.status}`);
-    }
-    osmData = await resp.json();
+    osmData = await fetchOverpass(query);
   } catch (err) {
     console.error('Overpass request failed', err);
     return new Response(
