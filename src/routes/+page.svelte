@@ -8,7 +8,8 @@
     Viewer,
     BBoxEditor,
     ShapeSelector,
-    MapExport
+    MapExport,
+    ProjectIO
   } from '$lib';
   import type maplibregl from 'maplibre-gl';
   let map: maplibregl.Map | undefined;
@@ -23,6 +24,7 @@
       <BBoxEditor />
       <ShapeSelector />
       <ModelControls />
+      <ProjectIO />
       <MapExport />
       <button
         class="w-full p-2 bg-blue-600 text-white"

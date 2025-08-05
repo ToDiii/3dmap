@@ -7,3 +7,4 @@ export { default as Viewer } from './components/Viewer.svelte';
 export { default as BBoxEditor } from './components/BBoxEditor.svelte';
 export { default as ShapeSelector } from './components/ShapeSelector.svelte';
 export { default as MapExport } from './components/MapExport.svelte';
+export { default as ProjectIO } from './components/ProjectIO.svelte';
