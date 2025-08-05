@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { buildOverpassQuery, convertTo3D } from '../../../lib/server/overpass';
+import { buildOverpassQuery } from '../../../lib/server/overpass';
 import { parsePolygon } from '../../../lib/server/polygon';
+import { convertTo3D } from '../../../lib/utils/convertTo3D';
+import * as THREE from 'three';
 
 describe('parsePolygon', () => {
   it('accepts GeoJSON polygon', () => {
@@ -53,24 +55,23 @@ describe('buildOverpassQuery', () => {
 });
 
 describe('convertTo3D', () => {
-  it('converts elements to features with height and scale', () => {
-    const data = {
-      elements: [
-        {
-          id: 1,
-          tags: { building: 'yes', height: '10' },
-          geometry: [
-            { lon: 1, lat: 2 },
-            { lon: 1, lat: 3 }
-          ]
-        }
-      ]
-    };
-    const result = convertTo3D(data, 2, 1, 1.5);
-    expect(result.features).toHaveLength(1);
-    const f = result.features[0];
-    expect(f.type).toBe('building');
-    expect(f.height).toBe(10 * 1.5 + 1);
-    expect(f.geometry[0]).toEqual([1 * 2, 1, 2 * 2]);
+  it('creates extruded meshes from features', () => {
+    const features = [
+      {
+        geometry: [
+          [0, 0, 0],
+          [0, 10, 0],
+          [10, 10, 0],
+          [10, 0, 0],
+          [0, 0, 0]
+        ],
+        height: 5,
+        type: 'building'
+      }
+    ];
+    const meshes = convertTo3D(features, 0);
+    expect(meshes).toHaveLength(1);
+    const mesh = meshes[0].mesh as THREE.Mesh;
+    expect(mesh.geometry instanceof THREE.ExtrudeGeometry).toBe(true);
   });
 });

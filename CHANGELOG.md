@@ -13,6 +13,8 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - ShapeSelector zum Zeichnen von Rechtecken und Kreisen auf der Karte
 - API-Unterstützung für Shapes beim Modellabruf
 - Overpass-Abfragen für gezeichnete Polygone
+- Clientseitige Konvertierung von OSM-Daten in 3D-Geometrien
+- Viewer rendert Modelle aus dem `modelStore` mit farbigen Materialien
 
 ---
 
