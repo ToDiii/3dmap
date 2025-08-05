@@ -2,6 +2,7 @@
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
   import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
+  import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
   import { onMount } from 'svelte';
   import { modelConfigStore } from '$lib/stores/modelConfigStore';
   import { pathStore } from '$lib/stores/pathStore';
@@ -45,22 +46,27 @@
 
   function exportModel(binary = false) {
     buildPathGeometry(path, currentBaseHeight, currentScale);
+    if (modelGroup.children.length === 0) {
+      exportMessage = 'Kein exportierbares Modell gefunden';
+      setTimeout(() => (exportMessage = null), 2000);
+      return;
+    }
     const exporter = new GLTFExporter();
     exporter.parse(
       modelGroup,
       (result) => {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const timestamp = new Date().toISOString().split('T')[0];
         let blob: Blob;
         let filename: string;
         if (binary) {
           blob = new Blob([result as ArrayBuffer], {
             type: 'model/gltf-binary'
           });
-          filename = `modell_${timestamp}.glb`;
+          filename = `modell_export_${timestamp}.glb`;
         } else {
           const json = JSON.stringify(result, null, 2);
           blob = new Blob([json], { type: 'model/gltf+json' });
-          filename = `modell_${timestamp}.gltf`;
+          filename = `modell_export_${timestamp}.gltf`;
         }
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -68,12 +74,35 @@
         a.download = filename;
         a.click();
         URL.revokeObjectURL(url);
-        exportMessage = `${binary ? 'GLB' : 'GLTF'} exportiert`;
+        exportMessage = 'Datei wurde heruntergeladen';
         setTimeout(() => (exportMessage = null), 2000);
       },
       (err) => console.error('export failed', err),
       { binary }
     );
+  }
+
+  function exportSTL() {
+    buildPathGeometry(path, currentBaseHeight, currentScale);
+    if (modelGroup.children.length === 0) {
+      exportMessage = 'Kein exportierbares Modell gefunden';
+      setTimeout(() => (exportMessage = null), 2000);
+      return;
+    }
+    const exporter = new STLExporter();
+    const result = exporter.parse(modelGroup, { binary: true }) as DataView;
+    const buffer = result.buffer as ArrayBuffer;
+    const blob = new Blob([buffer], { type: 'model/stl' });
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `modell_export_${timestamp}.stl`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    exportMessage = 'Datei wurde heruntergeladen';
+    setTimeout(() => (exportMessage = null), 2000);
   }
 
   function clearGroup(group: THREE.Group) {
@@ -218,6 +247,12 @@
         on:click={() => exportModel(true)}
       >
         GLB exportieren
+      </button>
+      <button
+        class="px-2 py-1 bg-purple-600 text-white text-sm rounded"
+        on:click={exportSTL}
+      >
+        STL exportieren
       </button>
       {#if exportMessage}
         <span class="px-2 py-1 text-sm bg-white/80 rounded">

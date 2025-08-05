@@ -15,6 +15,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Overpass-Abfragen für gezeichnete Polygone
 - Clientseitige Konvertierung von OSM-Daten in 3D-Geometrien
 - Viewer rendert Modelle aus dem `modelStore` mit farbigen Materialien
+- Export von Modellen als GLTF, GLB und STL mit Dateinamenvorschlag und Nutzerfeedback
 
 ---
 
