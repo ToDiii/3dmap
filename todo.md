@@ -135,3 +135,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: Shape-Selector für Rechtecke und Kreise
 [x] Feature: Overpass-Abfrage für gezeichnete Polygone
 [x] Feature: STL-Export
+[x] Feature: Gebäudeextrusion auf der Karte
