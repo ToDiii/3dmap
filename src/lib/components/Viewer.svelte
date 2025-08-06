@@ -2,7 +2,9 @@
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
   import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
-  import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
+  import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+  import * as exportSTL from 'threejs-export-stl';
+  import { exportTo3MF as export3MF } from 'three-3mf-exporter';
   import { onMount } from 'svelte';
   import { modelConfigStore } from '$lib/stores/modelConfigStore';
   import { pathStore } from '$lib/stores/pathStore';
@@ -17,7 +19,7 @@
   let modelGroup: THREE.Group = new THREE.Group();
   let pathGroup: THREE.Group = new THREE.Group();
   let ground: THREE.Object3D | undefined;
-  let exportMessage: string | null = null;
+  let toastMessage: string | null = null;
   let loadError: string | null = null;
   let currentScale = 1;
   let currentBaseHeight = 0;
@@ -47,8 +49,8 @@
   function exportModel(binary = false) {
     buildPathGeometry(path, currentBaseHeight, currentScale);
     if (modelGroup.children.length === 0) {
-      exportMessage = 'Kein exportierbares Modell gefunden';
-      setTimeout(() => (exportMessage = null), 2000);
+        toastMessage = 'Kein exportierbares Modell gefunden';
+        setTimeout(() => (toastMessage = null), 2000);
       return;
     }
     const exporter = new GLTFExporter();
@@ -74,26 +76,48 @@
         a.download = filename;
         a.click();
         URL.revokeObjectURL(url);
-        exportMessage = 'Datei wurde heruntergeladen';
-        setTimeout(() => (exportMessage = null), 2000);
+        toastMessage = 'Datei wurde heruntergeladen';
+        setTimeout(() => (toastMessage = null), 2000);
       },
       (err) => console.error('export failed', err),
       { binary }
     );
   }
 
-  function exportSTL() {
+  function createMergedGeometry() {
+    const geometries: THREE.BufferGeometry[] = [];
+    modelGroup.updateMatrixWorld(true);
+    modelGroup.traverse((obj: THREE.Object3D) => {
+      if (obj instanceof THREE.Mesh) {
+        const geom = obj.geometry.clone() as THREE.BufferGeometry;
+        geom.applyMatrix4(obj.matrixWorld);
+        geometries.push(geom);
+      }
+    });
+    if (geometries.length === 0) return null;
+    const merged = mergeBufferGeometries(geometries, false);
+    geometries.forEach((g) => g.dispose());
+    return merged;
+  }
+
+  function exportToSTL() {
     buildPathGeometry(path, currentBaseHeight, currentScale);
     if (modelGroup.children.length === 0) {
-      exportMessage = 'Kein exportierbares Modell gefunden';
-      setTimeout(() => (exportMessage = null), 2000);
+      toastMessage = 'Kein exportierbares Modell gefunden';
+      setTimeout(() => (toastMessage = null), 2000);
       return;
     }
-    const exporter = new STLExporter();
-    const result = exporter.parse(modelGroup, { binary: true }) as DataView;
-    const buffer = result.buffer as ArrayBuffer;
-    const blob = new Blob([buffer], { type: 'model/stl' });
-    const timestamp = new Date().toISOString().split('T')[0];
+    const geometry = createMergedGeometry();
+    if (!geometry) {
+      toastMessage = 'Kein exportierbares Modell gefunden';
+      setTimeout(() => (toastMessage = null), 2000);
+      return;
+    }
+    const mesh = new THREE.Mesh(geometry);
+    const buffer = exportSTL.fromMesh(mesh, true) as ArrayBuffer;
+    geometry.dispose();
+    const blob = new Blob([buffer], { type: exportSTL.mimeType });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `modell_export_${timestamp}.stl`;
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -101,8 +125,29 @@
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    exportMessage = 'Datei wurde heruntergeladen';
-    setTimeout(() => (exportMessage = null), 2000);
+    toastMessage = 'Datei wurde heruntergeladen';
+    setTimeout(() => (toastMessage = null), 2000);
+  }
+
+  async function exportTo3MF() {
+    buildPathGeometry(path, currentBaseHeight, currentScale);
+    if (modelGroup.children.length === 0) {
+      toastMessage = 'Kein exportierbares Modell gefunden';
+      setTimeout(() => (toastMessage = null), 2000);
+      return;
+    }
+    modelGroup.updateMatrixWorld(true);
+    const blob = await export3MF(modelGroup);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `modell_export_${timestamp}.3mf`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    toastMessage = 'Datei wurde heruntergeladen';
+    setTimeout(() => (toastMessage = null), 2000);
   }
 
   function clearGroup(group: THREE.Group) {
@@ -255,19 +300,25 @@
       </button>
       <button
         class="px-2 py-1 bg-purple-600 text-white text-sm rounded"
-        on:click={exportSTL}
+        on:click={exportToSTL}
       >
-        STL exportieren
+        Download STL
       </button>
-      {#if exportMessage}
-        <span class="px-2 py-1 text-sm bg-white/80 rounded">
-          {exportMessage}
-        </span>
-      {/if}
+      <button
+        class="px-2 py-1 bg-orange-600 text-white text-sm rounded"
+        on:click={exportTo3MF}
+      >
+        Download 3MF
+      </button>
     </div>
     {#if loadError}
       <span class="px-2 py-1 text-sm bg-red-600 text-white rounded">{loadError}</span>
     {/if}
   </div>
+  {#if toastMessage}
+    <div class="fixed bottom-4 right-4 bg-gray-800 text-white px-3 py-2 rounded shadow">
+      {toastMessage}
+    </div>
+  {/if}
 </div>
 

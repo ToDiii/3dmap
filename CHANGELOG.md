@@ -18,6 +18,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Export von Modellen als GLTF, GLB und STL mit Dateinamenvorschlag und Nutzerfeedback
 - Gebäudeextrusionen direkt auf der Karte
 - Export der Kartenextrusion als STL oder 3MF
+- STL- und 3MF-Download der sichtbaren Szene mit Zeitstempel und Toast-Bestätigung
 - Erweiterte ModelControls für Basishöhe, Gebäudehöhen-Multiplikator bis 5x und Layer-Filter mit Flächenlimit
 - Lokale Projekt-Zwischenspeicherung als `.3dmap.json` (Export & Import)
 - Projekt-Reset-Funktion zum Leeren aller Projekt-Stores
