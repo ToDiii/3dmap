@@ -48,6 +48,10 @@ async function loadModel() {
   }
 }
 
-modelConfigStore.subscribe(() => loadModel());
-bboxStore.subscribe(() => loadModel());
-shapeStore.subscribe(() => loadModel());
+import { browser } from '$app/environment';
+
+if (browser) {
+  modelConfigStore.subscribe(() => loadModel());
+  bboxStore.subscribe(() => loadModel());
+  shapeStore.subscribe(() => loadModel());
+}

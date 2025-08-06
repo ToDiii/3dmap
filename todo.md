@@ -140,3 +140,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: Projekt-Zwischenspeicherung als JSON-Datei
 [x] Feature: Projekt-Zurücksetzen (Stores leeren)
 [x] Testabdeckung für API und Komponenten
+[x] Playwright E2E-Tests für GPX-Upload, Pfadeditor und Viewer
