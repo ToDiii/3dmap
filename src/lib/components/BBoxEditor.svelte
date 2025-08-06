@@ -2,7 +2,8 @@
   import { onMount } from 'svelte';
   import { mapStore } from '$lib/stores/map';
   import { bboxStore } from '$lib/stores/bboxStore';
-  import { LngLatBounds, type Map as MaplibreMap, type MapMouseEvent } from 'maplibre-gl';
+  import maplibregl, { type Map as MaplibreMap, type MapMouseEvent } from 'maplibre-gl';
+  const { LngLatBounds } = maplibregl;
   import { onMapLoaded } from '$lib/utils/map';
 
   let map: MaplibreMap | undefined;
