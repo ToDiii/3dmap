@@ -139,3 +139,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: Export der Kartenextrusion als STL/3MF
 [x] Feature: Projekt-Zwischenspeicherung als JSON-Datei
 [x] Feature: Projekt-Zurücksetzen (Stores leeren)
+[x] Testabdeckung für API und Komponenten

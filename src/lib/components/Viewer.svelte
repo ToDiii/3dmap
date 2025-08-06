@@ -225,6 +225,11 @@
       renderer.dispose();
     };
   });
+
+  // exposed for testing
+  export function __test_getModelGroup() {
+    return modelGroup;
+  }
 </script>
 
 <div class="relative w-full h-full">

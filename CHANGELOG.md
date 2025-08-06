@@ -21,6 +21,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Erweiterte ModelControls für Basishöhe, Gebäudehöhen-Multiplikator bis 5x und Layer-Filter mit Flächenlimit
 - Lokale Projekt-Zwischenspeicherung als `.3dmap.json` (Export & Import)
 - Projekt-Reset-Funktion zum Leeren aller Projekt-Stores
+- Unit- und UI-Tests für Overpass-API und Komponenten
 
 ---
 
