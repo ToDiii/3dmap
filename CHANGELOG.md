@@ -26,6 +26,10 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Playwright-E2E-Tests für GPX-Upload, Pfadeditor und Viewer
 - Vitest-Setupdatei zur korrekten Renderung von SvelteKit-Komponenten
 - Dokumentation: CODEMAP mit Architektur und Datenflüssen
+- SSR-sicherer Wrapper für `mergeBufferGeometries` inkl. Basis-Tests
+
+### Fixed
+- ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest
 
 ---
 

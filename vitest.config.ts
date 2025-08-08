@@ -7,6 +7,9 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['vitest.setup.ts']
+    setupFiles: ['vitest.setup.ts'],
+    deps: {
+      inline: ['three', 'three/examples/jsm/utils/BufferGeometryUtils.js'],
+    },
   }
 });
