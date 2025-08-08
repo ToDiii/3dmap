@@ -142,3 +142,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Testabdeckung für API und Komponenten
 [x] Playwright E2E-Tests für GPX-Upload, Pfadeditor und Viewer
 [x] Feature: STL-/3MF-Export-Buttons mit Toast-Bestätigung
+[x] Codebasiskarte erstellt
