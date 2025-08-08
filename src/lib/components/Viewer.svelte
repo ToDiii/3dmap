@@ -2,7 +2,7 @@
   import * as THREE from 'three';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
   import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
-  import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+    import { mergeBufferGeometries } from '$lib/three/geometry';
   import * as exportSTL from 'threejs-export-stl';
   import { exportTo3MF as export3MF } from 'three-3mf-exporter';
   import { onMount } from 'svelte';
