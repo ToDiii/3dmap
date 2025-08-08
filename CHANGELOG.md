@@ -25,6 +25,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Unit- und UI-Tests für Overpass-API und Komponenten
 - Playwright-E2E-Tests für GPX-Upload, Pfadeditor und Viewer
 - Vitest-Setupdatei zur korrekten Renderung von SvelteKit-Komponenten
+- Dokumentation: CODEMAP mit Architektur und Datenflüssen
 
 ---
 
