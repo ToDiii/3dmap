@@ -58,6 +58,26 @@ Aktivieren:
 ### 🗺️ Routing aus Adressen
 Die Anwendung unterstützt das Berechnen von Routen aus mehreren Adressen. Die Geokodierung erfolgt über den in `GEOCODE_PROVIDER` festgelegten Dienst (nominatim, opencage oder mapbox). Der Routingdienst wird über `ROUTING_PROVIDER` gewählt (openrouteservice, osrm oder graphhopper). API‑Schlüssel können über `GEOCODE_API_KEY` und `ROUTING_API_KEY` gesetzt werden. Pro Route sind maximal `ROUTING_MAX_WAYPOINTS` Wegpunkte erlaubt. Beachten Sie die Nutzungsbedingungen und Rate-Limits der jeweiligen Anbieter.
 
+### 🌐 Overpass-Konfiguration
+Die serverseitigen Overpass-Abfragen werden über Umgebungsvariablen gesteuert. Wichtige Variablen:
+
+| Variable | Beschreibung | Default |
+|---|---|---|
+| `OVERPASS_ENDPOINTS` | Kommagetrennte Liste der Interpreter-Endpunkte | `https://overpass-api.de/api/interpreter,https://overpass.kumi.systems/api/interpreter` |
+| `OVERPASS_TIMEOUT_MS` | Request-Timeout in Millisekunden | `30000` |
+| `OVERPASS_MAX_RETRIES` | Anzahl der maximalen Retries bei Fehlern | `2` |
+| `OVERPASS_RETRY_BASE_MS` | Basiswert für Exponential Backoff | `500` |
+| `OVERPASS_MAX_AREA_KM2` | Ab dieser Fläche wird Tile-Splitting aktiviert | `25` |
+| `OVERPASS_TILE_DEG` | Kachelgröße in Grad | `0.05` |
+| `OVERPASS_CONCURRENCY` | Parallele Overpass-Anfragen | `1` |
+| `OVERPASS_USER_AGENT` | User-Agent für die API-Calls | `3dmap/1.0 (+contact@example.com)` |
+
+### 🤝 Fair Use
+Die Overpass API unterliegt strengen Rate-Limits. Durch serielle Abfragen, konfigurierbare Timeouts und Retries versucht die Anwendung, diese Limits einzuhalten. Bitte nutzen Sie eigene Endpunkte oder Spiegelserver für umfangreiche Anfragen und vermeiden Sie unnötige Last.
+
+### 🧩 Große Gebiete & Tile-Splitting
+Bereiche größer als `OVERPASS_MAX_AREA_KM2` werden automatisch in kleinere Kacheln (`OVERPASS_TILE_DEG`) unterteilt. Die Ergebnisse werden dedupliziert und zusammengeführt. Im Debug-Panel der Anwendung lässt sich nachvollziehen, wie viele Kacheln geladen wurden.
+
 ### ⚙️ Architektur
 
 | Ordner / Datei                      | Beschreibung                                 |

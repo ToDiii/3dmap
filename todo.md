@@ -98,7 +98,7 @@ Gebäudehöhe-Multiplikator: Ein Slider (z.B. von 0.5 bis 3.0), um die prozedura
 
 Elementauswahl für 3D-Modell: Eine Gruppe von Checkboxes (Gebäude, Straßen, Gewässer etc.), die festlegt, welche Datentypen von der Overpass API abgefragt und im 3D-Modell RENDERED werden sollen (unabhängig von der 2D-Kartenansicht).
 
-[ ] Anpassung des API-Endpunkts (/api/model/+server.ts).
+[x] Anpassung des API-Endpunkts (/api/model/+server.ts).
 
 Erweitere die POST-Anfrage, sodass sie alle neuen Parameter (Basishöhe, Multiplikator, Elementauswahl) entgegennimmt.
 
@@ -146,3 +146,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Fix: SSR-sicherer Wrapper für mergeBufferGeometries
 [x] Feature: Routing aus Adressen
 [x] Feature: MapLibre 3D-Extrusion mit serverseitiger Höhenberechnung
+[x] Overpass-Robustheit & Tile-Splitting

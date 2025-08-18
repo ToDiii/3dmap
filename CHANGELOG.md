@@ -29,6 +29,8 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Dokumentation: CODEMAP mit Architektur und Datenflüssen
 - SSR-sicherer Wrapper für `mergeBufferGeometries` inkl. Basis-Tests
 - Routing aus Adressen inkl. Geokodierung, Wegpunktlimit und GPX-Export
+- Resiliente Overpass-Abfragen mit konfigurierbaren Endpoints, Timeout, Retries und In-Flight-Dedupe
+- Tile-Splitting für große Gebiete inklusive Deduplizierung und Debug-Metadaten
 
 ### Fixed
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest

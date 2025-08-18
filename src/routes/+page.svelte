@@ -11,6 +11,7 @@
     MapExport,
     ProjectIO
   } from '$lib';
+  import { modelMeta, invalidateModel } from '$lib/stores/modelStore';
   import type maplibregl from 'maplibre-gl';
   let map: maplibregl.Map | undefined;
   let showViewer = false;
@@ -32,6 +33,23 @@
       >
         {showViewer ? '2D Karte' : '3D Ansicht'}
       </button>
+      {#if $modelMeta}
+        <details class="mt-4 text-sm">
+          <summary>Overpass Debug</summary>
+          <div class="space-y-1">
+            <div>Endpoint: {$modelMeta.endpoint}</div>
+            <div>Dauer: {$modelMeta.durationMs}ms</div>
+            <div>Tiles: {$modelMeta.tiles}</div>
+            <div>Cache: {$modelMeta.cache}</div>
+          </div>
+          <button class="mt-2 w-full p-2 bg-gray-200" on:click={invalidateModel}>
+            Erneut versuchen (Invalidate Cache)
+          </button>
+          {#if $modelMeta.tiles > 1}
+            <div class="mt-2 text-xs">Großes Gebiet, Daten in {$modelMeta.tiles} Kacheln geladen</div>
+          {/if}
+        </details>
+      {/if}
     </aside>
     <div class="flex-1 relative">
       {#if showViewer}

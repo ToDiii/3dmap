@@ -3,6 +3,15 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { buildOverpassQuery, convertTo3D } from '$lib/server/overpass';
 import { parsePolygon } from '$lib/server/polygon';
+import { env } from '$lib/server/env';
+import {
+  polygonAreaKm2,
+  bboxAreaKm2,
+  bboxToTiles,
+  splitPolygonToBboxes,
+  polygonToBbox
+} from '$lib/server/tiling';
+import { fetchOverpass } from '$lib/server/overpassClient';
 
 // persistent cache stored on disk
 const CACHE_FILE = join(process.cwd(), 'model-cache.json');
@@ -44,35 +53,6 @@ function createCacheKey(params: Record<string, any>): string {
   return JSON.stringify(Object.fromEntries(entries));
 }
 
-async function fetchOverpass(query: string): Promise<any> {
-  const urls = [
-    'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter'
-  ];
-  let lastError: any;
-  for (const url of urls) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25_000);
-    try {
-      const resp = await fetch(url, {
-        method: 'POST',
-        body: query,
-        signal: controller.signal
-      });
-      if (!resp.ok) {
-        throw new Error(`Overpass API error: ${resp.status}`);
-      }
-      return await resp.json();
-    } catch (err) {
-      lastError = err;
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-  throw lastError;
-}
-
-
 export const POST: RequestHandler = async ({ request }) => {
   let payload;
   try {
@@ -101,56 +81,113 @@ export const POST: RequestHandler = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Invalid polygon' }), { status: 400 });
   }
 
-  const cacheKey = createCacheKey({
+  const baseKey = createCacheKey({
     scale,
     baseHeight,
     buildingMultiplier,
     minArea,
     elements,
-    bbox,
-    shape: polygon
+    shape: polygon,
+    bbox
   });
 
-  if (invalidate) {
-    CACHE.delete(cacheKey);
-    saveCache();
-  } else if (CACHE.has(cacheKey)) {
-    return new Response(JSON.stringify(CACHE.get(cacheKey)), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+  // determine tiling
+  let tiles: Array<[number, number, number, number]> = [];
+  let usePolygon = false;
+  if (polygon) {
+    const area = polygonAreaKm2(polygon);
+    if (area > env.OVERPASS_MAX_AREA_KM2) {
+      tiles = splitPolygonToBboxes(polygon, env.OVERPASS_TILE_DEG);
+    } else {
+      tiles = [polygonToBbox(polygon)];
+      usePolygon = true;
+    }
+  } else if (bbox) {
+    const area = bboxAreaKm2(bbox);
+    if (area > env.OVERPASS_MAX_AREA_KM2) {
+      tiles = bboxToTiles(bbox, env.OVERPASS_TILE_DEG);
+    } else {
+      tiles = [bbox];
+    }
+  } else {
+    return new Response(JSON.stringify({ error: 'Missing shape or bbox' }), { status: 400 });
   }
 
-  const query = buildOverpassQuery(elements, bbox, polygon ?? undefined);
-  console.log('Overpass query', { bbox, shape: polygon, query });
-  let osmData;
-  try {
-    osmData = await fetchOverpass(query);
-  } catch (err) {
-    console.error('Overpass request failed', err);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch Overpass data', details: String(err) }),
-      { status: 500 }
-    );
+  // if request cache exists and no tiling
+  const cacheKey = baseKey;
+  if (!invalidate && tiles.length === 1 && CACHE.has(cacheKey)) {
+    const cached = CACHE.get(cacheKey);
+    return new Response(JSON.stringify(cached), { headers: { 'Content-Type': 'application/json' } });
   }
 
-  if (!osmData?.elements || osmData.elements.length === 0) {
-    return new Response(
-      JSON.stringify({
-        features: [],
-        geojson: { type: 'FeatureCollection', features: [] },
-        warning: 'Keine Daten vom Overpass-Server'
-      }),
-      {
-        headers: { 'Content-Type': 'application/json' }
+  const featureMap = new Map<string | number, any>();
+  const geoMap = new Map<string | number, any>();
+  let attempts = 0;
+  let durationMs = 0;
+  let endpointUsed = '';
+  let cacheHit = true;
+
+  for (const tile of tiles) {
+    const tileKey = `${baseKey}:${tile.join(',')}`;
+    let tileResult;
+    if (!invalidate && CACHE.has(tileKey)) {
+      tileResult = CACHE.get(tileKey);
+    } else {
+      cacheHit = false;
+      const query = buildOverpassQuery(elements, tile, usePolygon ? polygon : undefined);
+      let data;
+      try {
+        const res = await fetchOverpass(query);
+        data = res.data;
+        attempts += res.meta.attempts;
+        durationMs += res.meta.durationMs;
+        endpointUsed = res.meta.endpointUsed;
+      } catch (err: any) {
+        const status = err.status || 500;
+        const message =
+          status === 504 ? 'Overpass timeout' : status === 429 ? 'Rate limited' : 'Overpass request failed';
+        return new Response(JSON.stringify({ error: message }), { status });
       }
-    );
+      tileResult = convertTo3D(data, scale, baseHeight, buildingMultiplier, minArea);
+      CACHE.set(tileKey, tileResult);
+    }
+    for (const f of tileResult.features) {
+      featureMap.set(f.id, f);
+    }
+    for (const gf of tileResult.geojson.features) {
+      const id = (gf as any).id || gf.properties?.id || gf.properties?.['@id'] || Math.random();
+      geoMap.set(id, gf);
+    }
   }
 
-  const result = convertTo3D(osmData, scale, baseHeight, buildingMultiplier, minArea);
+  saveCache();
+
+  const result = {
+    features: Array.from(featureMap.values()),
+    geojson: { type: 'FeatureCollection', features: Array.from(geoMap.values()) }
+  };
+
   CACHE.set(cacheKey, result);
   saveCache();
-  return new Response(JSON.stringify(result), {
+
+  const meta = {
+    endpoint: endpointUsed,
+    attempts,
+    durationMs,
+    tiles: tiles.length,
+    cache: cacheHit ? 'hit' : 'miss'
+  } as const;
+
+  console.info('overpass', {
+    cache: meta.cache,
+    tiles: meta.tiles,
+    endpoint: meta.endpoint,
+    attempts: meta.attempts,
+    durationMs: meta.durationMs,
+    featureCount: result.features.length
+  });
+
+  return new Response(JSON.stringify({ ...result, meta }), {
     headers: { 'Content-Type': 'application/json' }
   });
 };
-
