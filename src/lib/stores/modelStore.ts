@@ -8,10 +8,12 @@ import { modelGeo } from './modelGeoStore';
 export const modelStore = writable<MeshFeature[]>([]);
 export const modelLoading = writable(false);
 export const modelError = writable<string | null>(null);
+export const modelMeta = writable<any | null>(null);
 
-async function loadModel() {
+async function loadModel(invalidate = false) {
   modelLoading.set(true);
   modelError.set(null);
+  modelMeta.set(null);
   try {
     const cfg = get(modelConfigStore);
     const bbox = get(bboxStore);
@@ -29,11 +31,13 @@ async function loadModel() {
         minArea: cfg.excludeSmallBuildings ? cfg.minBuildingArea : undefined,
         elements,
         bbox: shape ? undefined : bbox || undefined,
-        shape: shape || undefined
+        shape: shape || undefined,
+        invalidate
       })
     });
     const data = await res.json();
     modelGeo.set(data?.geojson || null);
+    modelMeta.set(data?.meta || null);
     if (!data?.features) {
       modelStore.set([]);
       modelError.set(data?.error || 'Ungültige Daten');
@@ -55,6 +59,10 @@ async function loadModel() {
 }
 
 import { browser } from '$app/environment';
+
+export function invalidateModel() {
+  loadModel(true);
+}
 
 if (browser) {
   modelConfigStore.subscribe(() => loadModel());
