@@ -6,6 +6,7 @@
   import { shapeStore } from '$lib/stores/shapeStore';
   import { modelConfigStore } from '$lib/stores/modelConfigStore';
   import { extrudeGroupStore } from '$lib/stores/extrudeGroupStore';
+  import { pathStore } from '$lib/stores/pathStore';
   import { get } from 'svelte/store';
   import * as THREE from 'three';
 
@@ -25,6 +26,9 @@
   extrudeGroupStore.set(extrudeGroup);
   let fetchTimer: ReturnType<typeof setTimeout> | null = null;
   let layerReady = false;
+  const routeSourceId = 'route-preview';
+  const routeLayerId = 'route-preview-line';
+  let unsubRoute: (() => void) | null = null;
 
   function polygonToBBox(poly: GeoJSON.Polygon): [number, number, number, number] {
     const coords = poly.coordinates[0];
@@ -154,6 +158,31 @@
       map!.addLayer(customLayer as any);
       layerReady = true;
       loadBuildings(get(shapeStore));
+
+      unsubRoute = pathStore.subscribe((line) => {
+        if (!map) return;
+        if (line) {
+          const geojson: GeoJSON.Feature<GeoJSON.LineString> = {
+            type: 'Feature',
+            geometry: line,
+            properties: {}
+          };
+          const src = map.getSource(routeSourceId) as maplibregl.GeoJSONSource | undefined;
+          if (src) src.setData(geojson);
+          else map.addSource(routeSourceId, { type: 'geojson', data: geojson });
+          if (!map.getLayer(routeLayerId)) {
+            map.addLayer({
+              id: routeLayerId,
+              type: 'line',
+              source: routeSourceId,
+              paint: { 'line-color': '#0066ff', 'line-width': 4 }
+            });
+          }
+        } else {
+          if (map.getLayer(routeLayerId)) map.removeLayer(routeLayerId);
+          if (map.getSource(routeSourceId)) map.removeSource(routeSourceId);
+        }
+      });
     });
 
     const unsubShape = shapeStore.subscribe((shape) => {
@@ -170,6 +199,7 @@
     return () => {
       unsubShape();
       unsubCfg();
+      if (unsubRoute) unsubRoute();
       mapStore.set(undefined);
       extrudeGroupStore.set(null);
       map?.remove();

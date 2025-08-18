@@ -7,6 +7,7 @@
 - Hauptfunktionen:
   - 2D-Karte mit MapLibre GL JS
   - GPX-Import und Pfad-Zeichnung mit maplibre-gl-draw
+  - Routing aus Adressen mit Geokodierung und GPX-Export
   - Dynamische OSM-Abfragen über die Overpass API
   - Extrusion von Geometrien zu 3D-Modellen mit Three.js
   - Parametergesteuertes Modell-UI (Maßstab, Höhe, Layerauswahl)
@@ -53,6 +54,9 @@ Aktivieren:
 2) Flag setzen und ausführen:
    - macOS/Linux: `E2E_ENABLED=true npm run test:e2e`
    - Windows (Powershell): `$env:E2E_ENABLED='true'; npm run test:e2e`
+
+### 🗺️ Routing aus Adressen
+Die Anwendung unterstützt das Berechnen von Routen aus mehreren Adressen. Die Geokodierung erfolgt über den in `GEOCODE_PROVIDER` festgelegten Dienst (nominatim, opencage oder mapbox). Der Routingdienst wird über `ROUTING_PROVIDER` gewählt (openrouteservice, osrm oder graphhopper). API‑Schlüssel können über `GEOCODE_API_KEY` und `ROUTING_API_KEY` gesetzt werden. Pro Route sind maximal `ROUTING_MAX_WAYPOINTS` Wegpunkte erlaubt. Beachten Sie die Nutzungsbedingungen und Rate-Limits der jeweiligen Anbieter.
 
 ### ⚙️ Architektur
 

@@ -27,6 +27,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Vitest-Setupdatei zur korrekten Renderung von SvelteKit-Komponenten
 - Dokumentation: CODEMAP mit Architektur und Datenflüssen
 - SSR-sicherer Wrapper für `mergeBufferGeometries` inkl. Basis-Tests
+- Routing aus Adressen inkl. Geokodierung, Wegpunktlimit und GPX-Export
 
 ### Fixed
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest
