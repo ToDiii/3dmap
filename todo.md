@@ -144,3 +144,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: STL-/3MF-Export-Buttons mit Toast-Bestätigung
 [x] Codebasiskarte erstellt
 [x] Fix: SSR-sicherer Wrapper für mergeBufferGeometries
+[x] Feature: Routing aus Adressen

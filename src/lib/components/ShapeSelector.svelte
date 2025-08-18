@@ -3,7 +3,6 @@
   import { mapStore } from '$lib/stores/map';
   import { shapeStore } from '$lib/stores/shapeStore';
   import maplibregl, { type Map as MaplibreMap, type MapMouseEvent } from 'maplibre-gl';
-  const { LngLatBounds } = maplibregl;
   import { onMapLoaded } from '$lib/utils/map';
 
   let map: MaplibreMap | undefined;
@@ -11,7 +10,7 @@
   let start: [number, number] | null = null;
   let drawingMode: 'rect' | 'circle' | null = null;
 
-  function boundsToPolygon(bounds: LngLatBounds): GeoJSON.Polygon {
+  function boundsToPolygon(bounds: maplibregl.LngLatBounds): GeoJSON.Polygon {
     const sw = bounds.getSouthWest();
     const ne = bounds.getNorthEast();
     const nw = { lng: sw.lng, lat: ne.lat };
@@ -91,7 +90,7 @@
       const onMove = (ev: MapMouseEvent) => {
         if (!start) return;
         if (drawingMode === 'rect') {
-          const bounds = new LngLatBounds(start, [ev.lngLat.lng, ev.lngLat.lat]);
+          const bounds = new maplibregl.LngLatBounds(start, [ev.lngLat.lng, ev.lngLat.lat]);
           updateSource(boundsToPolygon(bounds));
         } else {
           const r = Math.max(
@@ -106,7 +105,7 @@
         if (!start) return;
         let poly: GeoJSON.Polygon;
         if (drawingMode === 'rect') {
-          const bounds = new LngLatBounds(start, [ev.lngLat.lng, ev.lngLat.lat]);
+          const bounds = new maplibregl.LngLatBounds(start, [ev.lngLat.lng, ev.lngLat.lat]);
           poly = boundsToPolygon(bounds);
         } else {
           const r = Math.max(
