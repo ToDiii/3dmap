@@ -14,6 +14,12 @@
     { key: 'road', label: 'Straßen' }
   ];
 
+  const extraLayers: { id: string; label: string }[] = [
+    { id: 'extrude-buildings', label: '3D-Gebäude (Map)' },
+    { id: 'model-water', label: 'Gewässer (Geo)' },
+    { id: 'model-green', label: 'Grünflächen (Geo)' }
+  ];
+
   let visibility: Record<LayerKey, boolean> = {
     building: true,
     water: true,
@@ -23,6 +29,12 @@
 
   let reduceDetails = false;
 
+  let extraVisibility: Record<string, boolean> = {
+    'extrude-buildings': true,
+    'model-water': true,
+    'model-green': true
+  };
+
   function applyVisibility(key: LayerKey) {
     const map = get(mapStore);
     if (!map) return;
@@ -31,6 +43,16 @@
       def.ids.forEach((id) =>
         map.setLayoutProperty(id, 'visibility', visibility[key] ? 'visible' : 'none')
       );
+    });
+  }
+
+  function applyExtraVisibility(id: string) {
+    const map = get(mapStore);
+    if (!map) return;
+    onMapLoaded(map, () => {
+      if (map.getLayer(id)) {
+        map.setLayoutProperty(id, 'visibility', extraVisibility[id] ? 'visible' : 'none');
+      }
     });
   }
 
@@ -52,12 +74,14 @@
     const map = get(mapStore);
     if (map) {
       (Object.keys(visibility) as LayerKey[]).forEach((k) => applyVisibility(k));
+      extraLayers.forEach(({ id }) => applyExtraVisibility(id));
     }
   });
 
   mapStore.subscribe((map) => {
     if (map) {
       (Object.keys(visibility) as LayerKey[]).forEach((k) => applyVisibility(k));
+      extraLayers.forEach(({ id }) => applyExtraVisibility(id));
       applyDetailFilter();
     }
   });
@@ -67,6 +91,12 @@
   {#each layerOptions as { key, label }}
     <label class="flex items-center gap-2">
       <input type="checkbox" bind:checked={visibility[key]} on:change={() => applyVisibility(key)} />
+      <span>{label}</span>
+    </label>
+  {/each}
+  {#each extraLayers as { id, label }}
+    <label class="flex items-center gap-2">
+      <input type="checkbox" bind:checked={extraVisibility[id]} on:change={() => applyExtraVisibility(id)} />
       <span>{label}</span>
     </label>
   {/each}

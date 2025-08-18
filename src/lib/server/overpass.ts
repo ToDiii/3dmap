@@ -1,3 +1,5 @@
+import type * as GeoJSON from 'geojson';
+
 export function buildOverpassQuery(
   elements: string[],
   bbox?: [number, number, number, number],
@@ -36,40 +38,63 @@ export function convertTo3D(
   minArea = 0
 ) {
   const features: any[] = [];
+  const geoFeatures: GeoJSON.Feature[] = [];
   for (const element of data.elements || []) {
-    if (element.geometry) {
-      if (minArea > 0 && element.tags?.building) {
-        const area = polygonArea(element.geometry);
-        if (area < minArea) continue;
+    if (!element.geometry) continue;
+
+    if (minArea > 0 && element.tags?.building) {
+      const area = polygonArea(element.geometry);
+      if (area < minArea) continue;
+    }
+
+    // 3D geometry for viewer/export
+    const coords = element.geometry.map((p: any) => [p.lon * scale, baseHeight, p.lat * scale]);
+    let heightRaw = 0;
+    if (element.tags?.height) {
+      const m = /([0-9.]+)/.exec(element.tags.height);
+      if (m) heightRaw = parseFloat(m[1]);
+    } else if (element.tags?.['building:levels']) {
+      heightRaw = parseFloat(element.tags['building:levels']) * 3;
+    } else if (element.tags?.building) {
+      heightRaw = 10;
+    }
+    const featureType = element.tags?.building
+      ? 'building'
+      : element.tags?.natural === 'water'
+      ? 'water'
+      : element.tags?.leisure === 'park' || element.tags?.landuse === 'grass'
+      ? 'green'
+      : element.tags?.highway
+      ? 'road'
+      : 'other';
+    let height = 0;
+    if (featureType === 'building') {
+      height = heightRaw * buildingMultiplier + baseHeight;
+    }
+    features.push({ id: element.id, type: featureType, geometry: coords, height });
+
+    // GeoJSON output for map rendering
+    if (featureType === 'building' || featureType === 'water' || featureType === 'green') {
+      const poly = element.geometry.map((p: any) => [p.lon, p.lat]);
+      if (poly.length > 0 && (poly[0][0] !== poly[poly.length - 1][0] || poly[0][1] !== poly[poly.length - 1][1])) {
+        poly.push(poly[0]);
       }
-      const coords = element.geometry.map((p: any) => [p.lon * scale, baseHeight, p.lat * scale]);
-      let height = 0;
-      if (element.tags?.height) {
-        const m = /([0-9.]+)/.exec(element.tags.height);
-        if (m) height = parseFloat(m[1]);
-      } else if (element.tags?.['building:levels']) {
-        height = parseFloat(element.tags['building:levels']) * 3;
-      }
-      if (element.tags?.building) {
-        height = height * buildingMultiplier + baseHeight;
-      }
-      features.push({
-        id: element.id,
-        type: element.tags?.building
-          ? 'building'
-          : element.tags?.highway
-          ? 'road'
-          : element.tags?.natural === 'water'
-          ? 'water'
-          : element.tags?.leisure === 'park' || element.tags?.landuse === 'grass'
-          ? 'green'
-          : 'other',
-        geometry: coords,
-        height
+      const heightFinal =
+        featureType === 'building' ? baseHeight + heightRaw * buildingMultiplier : baseHeight;
+      geoFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: [poly] },
+        properties: {
+          height_raw: heightRaw,
+          base_height: baseHeight,
+          height_final: heightFinal,
+          featureType
+        }
       });
     }
   }
-  return { features };
+  const geojson: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: geoFeatures };
+  return { features, geojson };
 }
 
 export type ModelResult = ReturnType<typeof convertTo3D>;

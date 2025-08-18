@@ -3,47 +3,31 @@
   import 'maplibre-gl/dist/maplibre-gl.css';
   import { onMount } from 'svelte';
   import { mapStore } from '$lib/stores/map';
-  import { shapeStore } from '$lib/stores/shapeStore';
-  import { modelConfigStore } from '$lib/stores/modelConfigStore';
   import { extrudeGroupStore } from '$lib/stores/extrudeGroupStore';
+  import { modelGeo } from '$lib/stores/modelGeoStore';
+  import { modelError } from '$lib/stores/modelStore';
   import { pathStore } from '$lib/stores/pathStore';
-  import { get } from 'svelte/store';
   import * as THREE from 'three';
 
-  // Allow external binding to map instance for dynamic layer control
   export let map: maplibregl.Map | undefined;
 
-  // Style URL can be swapped via env var or prop
   const DEFAULT_STYLE = 'https://demotiles.maplibre.org/style.json';
   export let styleUrl: string = import.meta.env.VITE_MAP_STYLE_URL ?? DEFAULT_STYLE;
 
-  // Default view centered on Munich
   export let center: [number, number] = [11.576124, 48.137154];
   export let zoom: number = 5;
 
   let mapContainer: HTMLDivElement;
   let extrudeGroup: THREE.Group = new THREE.Group();
   extrudeGroupStore.set(extrudeGroup);
-  let fetchTimer: ReturnType<typeof setTimeout> | null = null;
-  let layerReady = false;
   const routeSourceId = 'route-preview';
   const routeLayerId = 'route-preview-line';
   let unsubRoute: (() => void) | null = null;
+  let unsubGeo: (() => void) | null = null;
+  let unsubErr: (() => void) | null = null;
+  let toastMessage: string | null = null;
 
-  function polygonToBBox(poly: GeoJSON.Polygon): [number, number, number, number] {
-    const coords = poly.coordinates[0];
-    let minLon = Infinity,
-      minLat = Infinity,
-      maxLon = -Infinity,
-      maxLat = -Infinity;
-    for (const [lon, lat] of coords) {
-      if (lon < minLon) minLon = lon;
-      if (lat < minLat) minLat = lat;
-      if (lon > maxLon) maxLon = lon;
-      if (lat > maxLat) maxLat = lat;
-    }
-    return [minLat, minLon, maxLat, maxLon];
-  }
+  const emptyFC: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 
   function clearGroup(group: THREE.Group) {
     group.traverse((obj) => {
@@ -59,14 +43,15 @@
     group.clear();
   }
 
-  function renderExtrudedBuildings(features: any[] = []) {
+  function renderExtrudedBuildings(features: GeoJSON.Feature[] = []) {
     clearGroup(extrudeGroup);
     if (!features || features.length === 0) {
       map?.triggerRepaint();
       return;
     }
     for (const f of features) {
-      const pts: [number, number][] = f.geometry?.map((c: number[]) => [c[0], c[2]]);
+      if (f.geometry.type !== 'Polygon') continue;
+      const pts = f.geometry.coordinates[0];
       if (!pts || pts.length < 3) continue;
       const shape = new THREE.Shape();
       pts.forEach(([lng, lat], idx) => {
@@ -74,8 +59,8 @@
         if (idx === 0) shape.moveTo(mc.x, mc.y);
         else shape.lineTo(mc.x, mc.y);
       });
-      const base = f.geometry?.[0]?.[1] ?? 0;
-      const extrudeHeight = (f.height ?? base) - base;
+      const base = (f.properties?.base_height as number) ?? 0;
+      const extrudeHeight = ((f.properties?.height_final as number) ?? base) - base;
       const geom = new THREE.ExtrudeGeometry(shape, {
         depth: extrudeHeight,
         bevelEnabled: false
@@ -88,31 +73,42 @@
     map?.triggerRepaint();
   }
 
-  async function loadBuildings(shape: GeoJSON.Polygon | null) {
-    if (!shape) {
-      renderExtrudedBuildings([]);
-      return;
+  function ensureLayers() {
+    if (!map) return;
+    if (!map.getSource('model-geo')) {
+      map.addSource('model-geo', { type: 'geojson', data: emptyFC });
     }
-    const bbox = polygonToBBox(shape);
-    const cfg = get(modelConfigStore);
-    try {
-      const res = await fetch('/api/model', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          elements: ['buildings'],
-          scale: 1,
-          baseHeight: cfg.baseHeight,
-          buildingMultiplier: cfg.buildingMultiplier,
-          minArea: cfg.excludeSmallBuildings ? cfg.minBuildingArea : undefined,
-          bbox
-        })
+    if (!map.getLayer('extrude-buildings')) {
+      map.addLayer({
+        id: 'extrude-buildings',
+        type: 'fill-extrusion',
+        source: 'model-geo',
+        filter: ['==', ['get', 'featureType'], 'building'],
+        paint: {
+          'fill-extrusion-color': '#b7c9ff',
+          'fill-extrusion-opacity': 0.9,
+          'fill-extrusion-height': ['get', 'height_final'],
+          'fill-extrusion-base': ['get', 'base_height']
+        }
       });
-      const data = await res.json();
-      renderExtrudedBuildings(data?.features ?? []);
-    } catch (err) {
-      console.error('failed to fetch model', err);
-      renderExtrudedBuildings([]);
+    }
+    if (!map.getLayer('model-water')) {
+      map.addLayer({
+        id: 'model-water',
+        type: 'fill',
+        source: 'model-geo',
+        filter: ['==', ['get', 'featureType'], 'water'],
+        paint: { 'fill-color': '#a0c8f0', 'fill-opacity': 0.5 }
+      });
+    }
+    if (!map.getLayer('model-green')) {
+      map.addLayer({
+        id: 'model-green',
+        type: 'fill',
+        source: 'model-geo',
+        filter: ['==', ['get', 'featureType'], 'green'],
+        paint: { 'fill-color': '#b6e3b6', 'fill-opacity': 0.5 }
+      });
     }
   }
 
@@ -125,39 +121,31 @@
     });
 
     map.on('style.load', () => {
-      // expose map instance via store for other components
       mapStore.set(map!);
-
       map!.addControl(new maplibregl.NavigationControl(), 'top-right');
       map!.addControl(new maplibregl.ScaleControl());
+      ensureLayers();
+      (window as any).__map = map;
 
-      const customLayer = {
-        id: 'extruded-buildings',
-        type: 'custom' as const,
-        renderingMode: '3d' as const,
-        onAdd: function (_map: maplibregl.Map, gl: WebGLRenderingContext) {
-          const renderer = new THREE.WebGLRenderer({
-            canvas: _map.getCanvas(),
-            context: gl
-          });
-          renderer.autoClear = false;
-          ;(this as any).renderer = renderer;
-          ;(this as any).scene = new THREE.Scene();
-          ;(this as any).camera = new THREE.Camera();
-          ;(this as any).scene.add(extrudeGroup);
-        },
-        render: function (gl: WebGLRenderingContext, matrix: number[]) {
-          const camera = (this as any).camera as THREE.Camera;
-          const scene = (this as any).scene as THREE.Scene;
-          const renderer = (this as any).renderer as THREE.WebGLRenderer;
-          camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix);
-          renderer.resetState();
-          renderer.render(scene, camera);
+      unsubGeo = modelGeo.subscribe((geo) => {
+        const src = map!.getSource('model-geo') as maplibregl.GeoJSONSource;
+        src.setData(geo || emptyFC);
+        ensureLayers();
+        const buildingFeatures =
+          geo?.features.filter((f) => f.properties?.featureType === 'building') || [];
+        renderExtrudedBuildings(buildingFeatures);
+        if (geo && geo.features.length === 0) {
+          toastMessage = 'Keine OSM-Gebäude im gewählten Bereich.';
+          setTimeout(() => (toastMessage = null), 2000);
         }
-      };
-      map!.addLayer(customLayer as any);
-      layerReady = true;
-      loadBuildings(get(shapeStore));
+      });
+
+      unsubErr = modelError.subscribe((err) => {
+        if (err) {
+          toastMessage = err;
+          setTimeout(() => (toastMessage = null), 2000);
+        }
+      });
 
       unsubRoute = pathStore.subscribe((line) => {
         if (!map) return;
@@ -185,20 +173,9 @@
       });
     });
 
-    const unsubShape = shapeStore.subscribe((shape) => {
-      if (!layerReady) return;
-      if (fetchTimer) clearTimeout(fetchTimer);
-      fetchTimer = setTimeout(() => loadBuildings(shape), 300);
-    });
-    const unsubCfg = modelConfigStore.subscribe(() => {
-      if (!layerReady) return;
-      if (fetchTimer) clearTimeout(fetchTimer);
-      fetchTimer = setTimeout(() => loadBuildings(get(shapeStore)), 300);
-    });
-
     return () => {
-      unsubShape();
-      unsubCfg();
+      if (unsubGeo) unsubGeo();
+      if (unsubErr) unsubErr();
       if (unsubRoute) unsubRoute();
       mapStore.set(undefined);
       extrudeGroupStore.set(null);
@@ -207,4 +184,10 @@
   });
 </script>
 
-<div bind:this={mapContainer} class="w-full h-full"></div>
+<div bind:this={mapContainer} class="w-full h-full relative">
+  {#if toastMessage}
+    <div class="absolute top-2 left-1/2 -translate-x-1/2 bg-red-600 text-white px-2 py-1 rounded text-sm">
+      {toastMessage}
+    </div>
+  {/if}
+</div>

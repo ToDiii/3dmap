@@ -134,9 +134,16 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   if (!osmData?.elements || osmData.elements.length === 0) {
-    return new Response(JSON.stringify({ features: [], warning: 'Keine Daten vom Overpass-Server' }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        features: [],
+        geojson: { type: 'FeatureCollection', features: [] },
+        warning: 'Keine Daten vom Overpass-Server'
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 
   const result = convertTo3D(osmData, scale, baseHeight, buildingMultiplier, minArea);

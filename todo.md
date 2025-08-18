@@ -145,3 +145,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Codebasiskarte erstellt
 [x] Fix: SSR-sicherer Wrapper für mergeBufferGeometries
 [x] Feature: Routing aus Adressen
+[x] Feature: MapLibre 3D-Extrusion mit serverseitiger Höhenberechnung
