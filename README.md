@@ -29,7 +29,7 @@ npm run dev
 
 #### Optional: Playwright vorbereiten
 ```bash
-npx playwright install
+npx playwright install --with-deps
 ```
 
 ### 🐳 Docker
@@ -43,13 +43,16 @@ docker compose up --build
 
 #### Unit-Tests (z. B. Overpass-Abfrage, 3D-Konvertierung)
 ```bash
-npx vitest run
+npm test
 ```
 
-#### UI-Tests (z. B. GPX-Upload, API-Fehler)
-```bash
-npx playwright test
-```
+#### E2E-Tests (optional)
+Standardmäßig sind E2E-Tests deaktiviert.
+Aktivieren:
+1) Browser installieren: `npx playwright install --with-deps`
+2) Flag setzen und ausführen:
+   - macOS/Linux: `E2E_ENABLED=true npm run test:e2e`
+   - Windows (Powershell): `$env:E2E_ENABLED='true'; npm run test:e2e`
 
 ### ⚙️ Architektur
 
