@@ -73,6 +73,9 @@ Die Anwendung unterstützt das Berechnen von Routen aus mehreren Adressen. Die G
 - Export über Button im 3D-Viewer
 - Dateiname enthält Zeitstempel für Nachvollziehbarkeit
 
+### 🏗️ Map-seitige 3D-Extrusion
+Serverseitig berechnete OSM-Gebäude werden zusätzlich als GeoJSON zurückgegeben und in MapLibre via `fill-extrusion` dargestellt. Die Eigenschaften `base_height` und `height_final` enthalten Basishöhe sowie den mit dem UI-Multiplikator verrechneten Endwert. Layer für Gebäude, Wasser und Grünflächen lassen sich in der LayerControl ein- oder ausblenden.
+
 ### 📚 Verwendete Technologien
 - [SvelteKit](https://kit.svelte.dev/)
 - [MapLibre GL JS](https://maplibre.org/)

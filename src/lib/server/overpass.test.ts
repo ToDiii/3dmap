@@ -74,6 +74,13 @@ describe('convertTo3D', () => {
     expect(water).toBeTruthy();
     const green = features.find((f) => f.type === 'green');
     expect(green).toBeTruthy();
+
+    // GeoJSON output
+    expect(res.geojson.features).toHaveLength(3); // building, water, green
+    const bGeo = res.geojson.features.find((f) => f.properties?.featureType === 'building');
+    expect(bGeo?.properties?.height_final).toBe(13);
+    const wGeo = res.geojson.features.find((f) => f.properties?.featureType === 'water');
+    expect(wGeo?.properties?.height_final).toBe(1);
   });
 
   it('filters buildings by min area', () => {
@@ -89,6 +96,7 @@ describe('convertTo3D', () => {
     };
     const res = convertTo3D({ elements: [small] }, 100, 0, 1, 1_000_000);
     expect(res.features).toHaveLength(0);
+    expect(res.geojson.features).toHaveLength(0);
   });
 });
 
