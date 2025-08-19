@@ -1,7 +1,10 @@
 <script lang="ts">
 import '../app.css';
 import favicon from '$lib/assets/favicon.svg';
-import { onMount } from 'svelte';
+import { onMount, onDestroy } from 'svelte';
+import CommandPalette from '$lib/components/CommandPalette.svelte';
+import ShortcutHelp from '$lib/components/ShortcutHelp.svelte';
+import { setupShortcuts } from '$lib/controls/shortcutListener';
 import { updateAvailable, initPWA, skipWaiting } from '$lib/pwa';
 import { readFromUrl } from '$lib/state/url';
 import { deserialize } from '$lib/state/serialize';
@@ -15,7 +18,9 @@ import { viewModeStore } from '$lib/stores/viewModeStore';
 import { mapStore } from '$lib/stores/map';
 import { browser } from '$app/environment';
 let { children } = $props();
+let removeShortcuts: (() => void) | undefined;
 onMount(async () => {
+  removeShortcuts = setupShortcuts();
   initPWA();
   if (!browser) return;
   const raw = readFromUrl();
@@ -41,6 +46,9 @@ onMount(async () => {
     if (m) m.on('moveend', debouncedWrite);
   });
 });
+onDestroy(() => {
+  removeShortcuts && removeShortcuts();
+});
 function reload() {
   skipWaiting();
 }
@@ -52,6 +60,8 @@ function reload() {
 <meta name="theme-color" content="#111111" />
 </svelte:head>
 {@render children?.()}
+<CommandPalette />
+<ShortcutHelp />
 {#if $updateAvailable}
   <div class="pwa-toast">Update verfügbar — <button on:click={reload}>Neu laden</button></div>
 {/if}

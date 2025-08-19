@@ -65,6 +65,12 @@ docker run -p 3000:3000 \
 -v $(pwd)/model-cache.json:/app/model-cache.json
 ```
 
+### ⌨️ Tastatur-Shortcuts & Command Palette
+Die Anwendung unterstützt zahlreiche Tastenkürzel.
+- `Ctrl/Cmd+K` – Command Palette öffnen
+- `Shift+?` – Shortcut-Übersicht
+- Weitere Aktionen wie Layer- oder Exportbefehle können über die Palette gesucht und ausgeführt werden.
+
 ### 🧪 Tests
 
 #### Unit-Tests (z. B. Overpass-Abfrage, 3D-Konvertierung)

@@ -10,6 +10,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 ## [Unreleased]
 
 ### Added
+- Tastatur-Shortcuts, globale Shortcut-Registry und Command Palette
 - ShapeSelector zum Zeichnen von Rechtecken und Kreisen auf der Karte
 - API-Unterstützung für Shapes beim Modellabruf
 - Overpass-Abfragen für gezeichnete Polygone

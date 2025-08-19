@@ -153,3 +153,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Server-Proxies für Geocoding & Routing
 [x] Build: PNG-Icons werden zur Build-Zeit aus SVG generiert
 [x] Feature: Szenenstate als komprimierten Permalink teilen
+[x] Feature: Tastatur-Shortcuts & Command Palette
