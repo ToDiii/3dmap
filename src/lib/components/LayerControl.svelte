@@ -4,6 +4,7 @@
   import { get } from 'svelte/store';
   import { onMount } from 'svelte';
   import { onMapLoaded } from '$lib/utils/map';
+  import { layerStore } from '$lib/stores/layerStore';
 
   type LayerKey = keyof typeof LAYERS;
 
@@ -35,6 +36,15 @@
     'model-green': true
   };
 
+  layerStore.subscribe((v) => {
+    extraVisibility['extrude-buildings'] = v.buildings3d;
+    extraVisibility['model-water'] = v.water;
+    extraVisibility['model-green'] = v.green;
+    setLayerVisibility('extrude-buildings', v.buildings3d);
+    setLayerVisibility('model-water', v.water);
+    setLayerVisibility('model-green', v.green);
+  });
+
   function applyVisibility(key: LayerKey) {
     const map = get(mapStore);
     if (!map) return;
@@ -46,14 +56,24 @@
     });
   }
 
-  function applyExtraVisibility(id: string) {
+  function setLayerVisibility(id: string, visible: boolean) {
     const map = get(mapStore);
     if (!map) return;
     onMapLoaded(map, () => {
       if (map.getLayer(id)) {
-        map.setLayoutProperty(id, 'visibility', extraVisibility[id] ? 'visible' : 'none');
+        map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
       }
     });
+  }
+
+  function applyExtraVisibility(id: string) {
+    setLayerVisibility(id, extraVisibility[id]);
+    layerStore.update((s) => ({
+      ...s,
+      buildings3d: extraVisibility['extrude-buildings'],
+      water: extraVisibility['model-water'],
+      green: extraVisibility['model-green']
+    }));
   }
 
   function applyDetailFilter() {
