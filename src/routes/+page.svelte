@@ -10,12 +10,13 @@
     ShapeSelector,
     MapExport,
     ProjectIO,
-    Legend
+    Legend,
+    ShareLink
   } from '$lib';
   import { modelMeta, invalidateModel } from '$lib/stores/modelStore';
   import type maplibregl from 'maplibre-gl';
+  import { viewModeStore } from '$lib/stores/viewModeStore';
   let map: maplibregl.Map | undefined;
-  let showViewer = false;
   let showLegend = true;
 </script>
 
@@ -28,6 +29,7 @@
       <ShapeSelector />
       <ModelControls />
       <ProjectIO />
+      <ShareLink />
       <MapExport />
       <label class="flex items-center gap-2">
         <input type="checkbox" bind:checked={showLegend} /> Legende anzeigen
@@ -37,9 +39,9 @@
       {/if}
       <button
         class="w-full p-2 bg-blue-600 text-white"
-        on:click={() => (showViewer = !showViewer)}
+        on:click={() => viewModeStore.update((m) => (m === 'map' ? 'viewer' : 'map'))}
       >
-        {showViewer ? '2D Karte' : '3D Ansicht'}
+        {$viewModeStore === 'viewer' ? '2D Karte' : '3D Ansicht'}
       </button>
       {#if $modelMeta}
         <details class="mt-4 text-sm">
@@ -60,7 +62,7 @@
       {/if}
     </aside>
     <div class="flex-1 relative">
-      {#if showViewer}
+      {#if $viewModeStore === 'viewer'}
         <Viewer />
       {:else}
         <Map bind:map />

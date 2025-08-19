@@ -9,3 +9,4 @@ export { default as ShapeSelector } from './components/ShapeSelector.svelte';
 export { default as MapExport } from './components/MapExport.svelte';
 export { default as ProjectIO } from './components/ProjectIO.svelte';
 export { default as Legend } from './components/Legend.svelte';
+export { default as ShareLink } from './components/ShareLink.svelte';

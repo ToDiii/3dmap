@@ -146,6 +146,13 @@ Bereiche größer als `OVERPASS_MAX_AREA_KM2` werden automatisch in kleinere Kac
 - Export über Button im 3D-Viewer
 - Dateiname enthält Zeitstempel für Nachvollziehbarkeit
 
+### 🔗 Teilen & Permalinks
+- Aktueller Szenenstand (Parameter, Auswahl, Route, Layer, Ansicht) kann über die URL geteilt werden.
+- Die Daten werden komprimiert und als `#s=...` in der Adresse abgelegt.
+- Es werden keine API-Keys oder Geheimnisse gespeichert.
+- Lange Szenen können das URL-Limit (~10 kB) überschreiten; in diesem Fall lieber den Projekt-Export nutzen.
+- Ungültige oder veraltete Links werden beim Laden ignoriert.
+
 ### 📱 PWA & Offline-Modus
 - Aktivierbar über `PWA_ENABLED=true` in der `.env`.
 - Optionales Tile-Caching: Domains in `TILE_CACHE_ALLOWLIST` (kommagetrennt) eintragen.

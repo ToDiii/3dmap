@@ -3,9 +3,43 @@ import '../app.css';
 import favicon from '$lib/assets/favicon.svg';
 import { onMount } from 'svelte';
 import { updateAvailable, initPWA, skipWaiting } from '$lib/pwa';
+import { readFromUrl } from '$lib/state/url';
+import { deserialize } from '$lib/state/serialize';
+import { applyState, debouncedWrite } from '$lib/state/bridge';
+import { modelConfigStore } from '$lib/stores/modelConfigStore';
+import { bboxStore } from '$lib/stores/bboxStore';
+import { shapeStore } from '$lib/stores/shapeStore';
+import { routeStore } from '$lib/stores/routeStore';
+import { layerStore } from '$lib/stores/layerStore';
+import { viewModeStore } from '$lib/stores/viewModeStore';
+import { mapStore } from '$lib/stores/map';
+import { browser } from '$app/environment';
 let { children } = $props();
-onMount(() => {
+onMount(async () => {
   initPWA();
+  if (!browser) return;
+  const raw = readFromUrl();
+  if (raw) {
+    const st = deserialize(raw);
+    if (st) {
+      try {
+        await applyState(st);
+      } catch (e) {
+        console.error('apply state failed', e);
+      }
+    } else {
+      console.warn('Ungültiger Link-State');
+    }
+  }
+  modelConfigStore.subscribe(() => debouncedWrite());
+  bboxStore.subscribe(() => debouncedWrite());
+  shapeStore.subscribe(() => debouncedWrite());
+  routeStore.subscribe(() => debouncedWrite());
+  layerStore.subscribe(() => debouncedWrite());
+  viewModeStore.subscribe(() => debouncedWrite());
+  mapStore.subscribe((m) => {
+    if (m) m.on('moveend', debouncedWrite);
+  });
 });
 function reload() {
   skipWaiting();
