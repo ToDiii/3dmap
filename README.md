@@ -96,6 +96,21 @@ Die Anwendung kann Höhenprofile entlang berechneter Routen erstellen und die 3D
 
 Nach der Routenberechnung wird automatisch ein Korridor (Buffer) erzeugt, aus dem OSM-Features für das 3D-Modell geladen werden. Bei Ausfällen des Höhenproviders wird die Route ohne Profil angezeigt.
 
+### 🔒 Server-Proxies für Geocoding & Routing
+Geocoding- und Routing-Anfragen laufen nun über eigene Server-Endpunkte (`/api/geocode`, `/api/route`). Dadurch bleiben API-Keys geschützt, Ergebnisse werden gecacht und bei temporären Fehlern automatisch wiederholt.
+
+| Variable | Beschreibung | Default |
+|---|---|---|
+| `GEOCODE_CACHE_TTL_MS` | Cache-Lebensdauer für Geocode-Ergebnisse | `86400000` |
+| `GEOCODE_CACHE_MAX_ENTRIES` | Max. Einträge im Geocode-Cache | `5000` |
+| `ROUTING_CACHE_TTL_MS` | Cache-Lebensdauer für Routing-Ergebnisse | `3600000` |
+| `ROUTING_CACHE_MAX_ENTRIES` | Max. Einträge im Routing-Cache | `2000` |
+| `API_RATE_LIMIT_PER_MIN` | Prozesseitiges Request-Limit pro Minute | `120` |
+| `SERVER_RETRY_BASE_MS` | Basis für Exponential Backoff | `400` |
+| `SERVER_MAX_RETRIES` | Maximale Retries bei 429/503/504 | `2` |
+
+Im Entwicklungsmodus liefern die Endpunkte zusätzlich ein `meta`-Objekt mit Informationen zu Cache-Treffern und Anzahl der Versuche. Auf dem Client sind keine Drittanbieter-Keys mehr sichtbar.
+
 ### 🌐 Overpass-Konfiguration
 Die serverseitigen Overpass-Abfragen werden über Umgebungsvariablen gesteuert. Wichtige Variablen:
 

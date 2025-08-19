@@ -150,3 +150,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: Höhenprofil & Routenkorridor
 [x] Feature: Thematische Schemata, Legende und Hover-Infos
 [x] CI/CD: Docker-Build & Release-Workflow über GHCR
+[x] Server-Proxies für Geocoding & Routing

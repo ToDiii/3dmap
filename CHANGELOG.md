@@ -35,6 +35,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Farbpaletten für Gebäude-/Flächentypen inkl. Legende und Hover-Infos
 - GitHub Actions Workflow für Docker-Builds und Releases nach GHCR
 - Dokumentation zum Ausführen des Containers via Docker
+- Serverseitige Proxies für Geocoding und Routing mit Caching, Rate-Limiting und Retry
 
 ### Fixed
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest
