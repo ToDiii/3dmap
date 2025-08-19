@@ -2,14 +2,22 @@ import * as THREE from 'three';
 
 export type SimplePolygon = [number, number, number][];
 export interface Feature {
+  id?: number | string;
   geometry: SimplePolygon | SimplePolygon[];
   height: number;
   type: 'building' | 'road' | 'water' | 'green' | 'other';
+  subtype?:
+    | 'building_residential'
+    | 'building_commercial'
+    | 'building_industrial'
+    | 'building_generic';
 }
 
 export interface MeshFeature {
   mesh: THREE.Mesh;
   type: Feature['type'];
+  subtype?: Feature['subtype'];
+  id?: number | string;
 }
 
 function toPolygons(geom: Feature['geometry']): SimplePolygon[] {
@@ -34,7 +42,13 @@ export function convertTo3D(features: Feature[], baseHeight: number): MeshFeatur
       geom.rotateX(-Math.PI / 2);
       geom.translate(0, baseHeight, 0);
       const mesh = new THREE.Mesh(geom);
-      meshes.push({ mesh, type: f.type });
+      mesh.userData = {
+        id: f.id,
+        featureType: f.type,
+        subtype: f.subtype,
+        height_final: f.height
+      };
+      meshes.push({ mesh, type: f.type, subtype: f.subtype, id: f.id });
     }
   }
   return meshes;

@@ -32,6 +32,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Resiliente Overpass-Abfragen mit konfigurierbaren Endpoints, Timeout, Retries und In-Flight-Dedupe
 - Tile-Splitting für große Gebiete inklusive Deduplizierung und Debug-Metadaten
 - Höhenprofil für Routen inkl. Geländeauffahrung und OSM-Korridor
+- Farbpaletten für Gebäude-/Flächentypen inkl. Legende und Hover-Infos
 
 ### Fixed
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest

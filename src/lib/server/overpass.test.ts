@@ -31,7 +31,7 @@ describe('convertTo3D', () => {
             { lon: 1, lat: 1 },
             { lon: 1, lat: 0 }
           ],
-          tags: { building: 'yes', 'building:levels': '2' }
+          tags: { building: 'residential', 'building:levels': '2' }
         },
         {
           id: 2,
@@ -68,6 +68,7 @@ describe('convertTo3D', () => {
     expect(features).toHaveLength(4);
     const building = features.find((f) => f.type === 'building');
     expect(building?.height).toBe(13); // (2 levels *3)*2 + baseHeight(1)
+    expect(building?.subtype).toBe('building_residential');
     const road = features.find((f) => f.type === 'road');
     expect(road?.geometry[0][1]).toBe(1);
     const water = features.find((f) => f.type === 'water');
@@ -79,6 +80,7 @@ describe('convertTo3D', () => {
     expect(res.geojson.features).toHaveLength(3); // building, water, green
     const bGeo = res.geojson.features.find((f) => f.properties?.featureType === 'building');
     expect(bGeo?.properties?.height_final).toBe(13);
+    expect((bGeo?.properties as any)?.subtype).toBe('building_residential');
     const wGeo = res.geojson.features.find((f) => f.properties?.featureType === 'water');
     expect(wGeo?.properties?.height_final).toBe(1);
   });

@@ -9,12 +9,14 @@
     BBoxEditor,
     ShapeSelector,
     MapExport,
-    ProjectIO
+    ProjectIO,
+    Legend
   } from '$lib';
   import { modelMeta, invalidateModel } from '$lib/stores/modelStore';
   import type maplibregl from 'maplibre-gl';
   let map: maplibregl.Map | undefined;
   let showViewer = false;
+  let showLegend = true;
 </script>
 
   <div class="flex w-full h-screen">
@@ -27,6 +29,12 @@
       <ModelControls />
       <ProjectIO />
       <MapExport />
+      <label class="flex items-center gap-2">
+        <input type="checkbox" bind:checked={showLegend} /> Legende anzeigen
+      </label>
+      {#if showLegend}
+        <Legend />
+      {/if}
       <button
         class="w-full p-2 bg-blue-600 text-white"
         on:click={() => (showViewer = !showViewer)}
