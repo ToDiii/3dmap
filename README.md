@@ -146,6 +146,13 @@ Bereiche größer als `OVERPASS_MAX_AREA_KM2` werden automatisch in kleinere Kac
 - Export über Button im 3D-Viewer
 - Dateiname enthält Zeitstempel für Nachvollziehbarkeit
 
+### 📱 PWA & Offline-Modus
+- Aktivierbar über `PWA_ENABLED=true` in der `.env`.
+- Optionales Tile-Caching: Domains in `TILE_CACHE_ALLOWLIST` (kommagetrennt) eintragen.
+- Cache nur Tiles, deren Nutzungsbedingungen es erlauben.
+- Installation außerhalb von `localhost` erfordert HTTPS.
+- Enthält einfache SVG-Icons unter `static/icons/`; für eigene Branding-Grafiken ersetzen.
+
 ### 🏗️ Map-seitige 3D-Extrusion
 Serverseitig berechnete OSM-Gebäude werden zusätzlich als GeoJSON zurückgegeben und in MapLibre via `fill-extrusion` dargestellt. Die Eigenschaften `base_height` und `height_final` enthalten Basishöhe sowie den mit dem UI-Multiplikator verrechneten Endwert. Layer für Gebäude, Wasser und Grünflächen lassen sich in der LayerControl ein- oder ausblenden.
 

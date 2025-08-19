@@ -55,3 +55,10 @@ function getNumberEnv(name: string, def: number): number {
 export const ELEVATION_BATCH_SIZE = getNumberEnv('ELEVATION_BATCH_SIZE', 100);
 export const ELEVATION_MAX_SAMPLES = getNumberEnv('ELEVATION_MAX_SAMPLES', 2000);
 export const ROUTE_BUFFER_METERS = getNumberEnv('ROUTE_BUFFER_METERS', 75);
+
+const tileCacheAllowlistRaw = getEnv('TILE_CACHE_ALLOWLIST');
+export const TILE_CACHE_ALLOWLIST = tileCacheAllowlistRaw
+  ? tileCacheAllowlistRaw.split(',').map((d) => d.trim()).filter(Boolean)
+  : [];
+
+export const PWA_ENABLED = (getEnv('PWA_ENABLED') ?? 'false').toLowerCase() === 'true';

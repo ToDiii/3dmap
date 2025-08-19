@@ -36,10 +36,12 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - GitHub Actions Workflow für Docker-Builds und Releases nach GHCR
 - Dokumentation zum Ausführen des Containers via Docker
 - Serverseitige Proxies für Geocoding und Routing mit Caching, Rate-Limiting und Retry
+- PWA-Unterstützung mit Offline-Caching und Update-Hinweis
 
 ### Fixed
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest
 - GHCR release workflow uses lowercase image tags to satisfy registry requirements
+- Replaced PNG PWA icons with SVG placeholders to avoid binary files
 
 ---
 
