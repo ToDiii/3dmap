@@ -8,5 +8,5 @@ export function bufferLine(
 ): GeoJSON.Polygon {
   const feat = lineString(line.coordinates);
   const buf = buffer(feat, meters, { units: 'meters' });
-  return buf.geometry as GeoJSON.Polygon;
+  return buf!.geometry as GeoJSON.Polygon;
 }

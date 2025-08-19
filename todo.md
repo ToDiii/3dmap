@@ -155,3 +155,5 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: Szenenstate als komprimierten Permalink teilen
 [x] Feature: Tastatur-Shortcuts & Command Palette
 [x] Feature: Optionale Telemetrie (Sentry) und Web-Vitals
+[x] Permalink SSR-Fix
+[x] Error-Flow stabilisieren / ErrorBoundary entfernen

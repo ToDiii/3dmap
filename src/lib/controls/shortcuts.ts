@@ -7,6 +7,7 @@ import { resetProject } from '$lib/utils/projectIO';
 import { collectCurrentState } from '$lib/state/bridge';
 import { serialize } from '$lib/state/serialize';
 import { writeToUrl } from '$lib/state/url';
+import { browser } from '$app/environment';
 
 export interface Shortcut {
   id: string;
@@ -154,6 +155,7 @@ function buildRegistry(): Shortcut[] {
       combo: 'Mod+Shift+L',
       group: 'Projekt',
       run: async () => {
+        if (!browser) return;
         const s = serialize(collectCurrentState());
         writeToUrl(s, true);
         await navigator.clipboard.writeText(location.href);

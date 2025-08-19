@@ -1,4 +1,4 @@
-import { onCLS, onFID, onLCP, onINP } from 'web-vitals';
+import { onCLS, onLCP, onINP } from 'web-vitals';
 import * as Sentry from '@sentry/sveltekit';
 import { settingsStore } from '$lib/stores/settingsStore';
 import { TELEMETRY_ENABLED, SENTRY_DSN } from '$lib/config/env';
@@ -21,13 +21,11 @@ export function initWebVitals() {
   if (!(TELEMETRY_ENABLED && SENTRY_DSN && consent)) {
     const log = (m: any) => console.info('web-vital', m);
     onCLS(log);
-    onFID(log);
     onLCP(log);
     onINP(log);
     return;
   }
   onCLS(send);
-  onFID(send);
   onLCP(send);
   onINP(send);
 }

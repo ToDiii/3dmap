@@ -10,7 +10,7 @@ import {
 } from '$lib/config/env';
 import { settingsStore } from '$lib/stores/settingsStore';
 
-export function scrubEvent(event: Sentry.Event): Sentry.Event | null {
+export function scrubEvent(event: Sentry.ErrorEvent): Sentry.ErrorEvent | null {
   if (event.request?.url) {
     try {
       const u = new URL(event.request.url);
@@ -35,7 +35,7 @@ function init() {
     tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
     denyUrls: [/tile/, /cdn/],
     beforeSend(event) {
-      return scrubEvent(event);
+      return scrubEvent(event as Sentry.ErrorEvent);
     }
   });
 }

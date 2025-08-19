@@ -1,4 +1,8 @@
-import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
+import LZString from 'lz-string';
+const {
+  compressToEncodedURIComponent,
+  decompressFromEncodedURIComponent
+} = LZString;
 import type { SceneState } from './schema';
 import { STATE_VERSION } from './schema';
 

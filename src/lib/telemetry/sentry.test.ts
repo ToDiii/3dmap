@@ -8,12 +8,12 @@ describe('scrubEvent', () => {
       user: { email: 'a@b.com' }
     };
     const res = scrubEvent(event)!;
-    expect(res.request.url).toBe('https://example.com/x');
+    expect(res.request?.url).toBe('https://example.com/x');
     expect(res.user).toBeUndefined();
   });
   it('rounds coordinates', () => {
     const event: any = { request: { url: 'https://ex.com/10.12345,5.98765' } };
     const res = scrubEvent(event)!;
-    expect(res.request.url).toBe('https://ex.com/10.12,5.99');
+    expect(res.request?.url).toBe('https://ex.com/10.12,5.99');
   });
 });
