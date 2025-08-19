@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { unlinkSync, existsSync } from 'fs';
 
 const mock = vi.fn(async () => ({
   geometry: { type: 'LineString', coordinates: [[1, 2], [3, 4]] },
@@ -6,6 +7,7 @@ const mock = vi.fn(async () => ({
   durationMin: 10
 }));
 vi.mock('$lib/server/providers/route', () => ({ routeWaypoints: mock }));
+if (existsSync('route-cache.json')) unlinkSync('route-cache.json');
 
 const req = (body: any) =>
   new Request('http://localhost', {

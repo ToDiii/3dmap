@@ -10,7 +10,9 @@ describe('modelConfigStore', () => {
       buildingMultiplier: 1,
       elements: { buildings: true, roads: true, water: true, green: true },
       excludeSmallBuildings: false,
-      minBuildingArea: 50
+      minBuildingArea: 50,
+      minBuildingHeightMM: 0,
+      cropMapToBounds: false
     });
   });
 

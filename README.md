@@ -16,6 +16,18 @@
   - Fehlerhandling im UI
   - Tests für API und UI
 
+### 📁 Map2Model Project Import (v1)
+
+Das Projekt kann JSON-Dateien aus Map2Model laden und auf die internen Stores abbilden. Unterstützte Optionen:
+
+- Farben für Straßen, Wasser, Grünflächen, Gebäude, Sand, Piere und Basis
+- Basisplatte und Rahmen (Höhe, Dicke)
+- Mindestgebäudehöhe sowie minimale Gebäudegrundfläche
+- Zuschnitt der OSM-Daten auf das Projektpolygon
+- GPX-Pfad mit Höhe, Breite und Farbe
+
+Nicht unterstützte Tabellen wie benutzerdefinierte Straßen- oder Wasserbreiten werden derzeit ignoriert.
+
 ### 🚀 Schnellstart (lokale Entwicklung)
 
 #### Voraussetzungen

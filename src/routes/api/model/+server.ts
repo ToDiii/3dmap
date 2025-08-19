@@ -68,6 +68,8 @@ export const POST: RequestHandler = async ({ request }) => {
     baseHeight = 0,
     buildingMultiplier = 1,
     minArea = 0,
+    minBuildingHeightMM = 0,
+    clipToShape = false,
     elements,
     bbox,
     shape,
@@ -99,6 +101,8 @@ export const POST: RequestHandler = async ({ request }) => {
     baseHeight,
     buildingMultiplier,
     minArea,
+    minBuildingHeightMM,
+    clipToShape,
     elements,
     shape: polygon || routePolygon,
     bbox,
@@ -167,7 +171,7 @@ export const POST: RequestHandler = async ({ request }) => {
           status === 504 ? 'Overpass timeout' : status === 429 ? 'Rate limited' : 'Overpass request failed';
         return new Response(JSON.stringify({ error: message }), { status });
       }
-      tileResult = convertTo3D(data, scale, baseHeight, buildingMultiplier, minArea);
+      tileResult = convertTo3D(data, scale, baseHeight, buildingMultiplier, minArea, clipToShape ? polygon : undefined, minBuildingHeightMM);
       CACHE.set(tileKey, tileResult);
     }
     for (const f of tileResult.features) {

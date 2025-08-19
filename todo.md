@@ -157,3 +157,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: Optionale Telemetrie (Sentry) und Web-Vitals
 [x] Permalink SSR-Fix
 [x] Error-Flow stabilisieren / ErrorBoundary entfernen
+[x] Map2Model Projektimport mit Basis/Frame, Mindestgebäudehöhe und Clipping

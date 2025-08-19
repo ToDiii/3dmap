@@ -14,6 +14,8 @@ export interface ModelConfig {
   elements: ModelElements;
   excludeSmallBuildings: boolean;
   minBuildingArea: number;
+  minBuildingHeightMM: number;
+  cropMapToBounds: boolean;
 }
 
 const defaultConfig: ModelConfig = {
@@ -27,7 +29,9 @@ const defaultConfig: ModelConfig = {
     green: true
   },
   excludeSmallBuildings: false,
-  minBuildingArea: 50
+  minBuildingArea: 50,
+  minBuildingHeightMM: 0,
+  cropMapToBounds: false
 };
 
 function createModelConfigStore() {
