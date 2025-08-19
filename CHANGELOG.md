@@ -38,6 +38,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 
 ### Fixed
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest
+- GHCR release workflow uses lowercase image tags to satisfy registry requirements
 
 ---
 

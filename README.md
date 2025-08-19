@@ -45,7 +45,7 @@ docker compose up --build
 - Pull:
 
 ```bash
-docker pull ghcr.io/ToDiii/3dmap:latest
+docker pull ghcr.io/todiii/3dmap:latest
 ```
 
 - Start:
@@ -56,7 +56,7 @@ docker run -p 3000:3000 \
   -e ROUTING_PROVIDER=openrouteservice -e ROUTING_API_KEY=sk_xxx \
   -e GEOCODE_PROVIDER=nominatim \
   -e ELEVATION_PROVIDER=opentopodata \
-  ghcr.io/ToDiii/3dmap:latest
+  ghcr.io/todiii/3dmap:latest
 ```
 
 - Optional: Volume für Cache

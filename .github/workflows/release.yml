@@ -44,11 +44,12 @@ jobs:
       - name: Determine tags
         id: meta
         run: |
+          IMAGE_NAME_LC="${IMAGE_NAME,,}"
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/}"
-            echo "tags=${{ env.IMAGE_NAME }}:${VERSION},${{ env.IMAGE_NAME }}:latest" >> $GITHUB_OUTPUT
+            echo "tags=${IMAGE_NAME_LC}:${VERSION},${IMAGE_NAME_LC}:latest" >> $GITHUB_OUTPUT
           else
-            echo "tags=${{ env.IMAGE_NAME }}:latest" >> $GITHUB_OUTPUT
+            echo "tags=${IMAGE_NAME_LC}:latest" >> $GITHUB_OUTPUT
           fi
       - name: Build and push
         uses: docker/build-push-action@v6
