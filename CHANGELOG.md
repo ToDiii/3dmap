@@ -33,6 +33,8 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Tile-Splitting für große Gebiete inklusive Deduplizierung und Debug-Metadaten
 - Höhenprofil für Routen inkl. Geländeauffahrung und OSM-Korridor
 - Farbpaletten für Gebäude-/Flächentypen inkl. Legende und Hover-Infos
+- GitHub Actions Workflow für Docker-Builds und Releases nach GHCR
+- Dokumentation zum Ausführen des Containers via Docker
 
 ### Fixed
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest

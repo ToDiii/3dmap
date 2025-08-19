@@ -40,6 +40,31 @@ npx playwright install --with-deps
 docker compose up --build
 ```
 
+#### Run via Docker
+
+- Pull:
+
+```bash
+docker pull ghcr.io/ToDiii/3dmap:latest
+```
+
+- Start:
+
+```bash
+docker run -p 3000:3000 \
+  -e OVERPASS_ENDPOINTS="https://overpass-api.de/api/interpreter" \
+  -e ROUTING_PROVIDER=openrouteservice -e ROUTING_API_KEY=sk_xxx \
+  -e GEOCODE_PROVIDER=nominatim \
+  -e ELEVATION_PROVIDER=opentopodata \
+  ghcr.io/ToDiii/3dmap:latest
+```
+
+- Optional: Volume für Cache
+
+```bash
+-v $(pwd)/model-cache.json:/app/model-cache.json
+```
+
 ### 🧪 Tests
 
 #### Unit-Tests (z. B. Overpass-Abfrage, 3D-Konvertierung)
