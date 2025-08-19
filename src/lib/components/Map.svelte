@@ -8,6 +8,8 @@
   import { modelError } from '$lib/stores/modelStore';
   import { pathStore } from '$lib/stores/pathStore';
   import * as THREE from 'three';
+  import { COLORS } from '$lib/constants/palette';
+  import { getBuildingMaterial, disposeBuildingMaterials } from '$lib/three/materials';
 
   export let map: maplibregl.Map | undefined;
 
@@ -29,14 +31,16 @@
 
   const emptyFC: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 
-  function clearGroup(group: THREE.Group) {
+  function clearGroup(group: THREE.Group, disposeMaterials = false) {
     group.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
         obj.geometry.dispose();
-        if (Array.isArray(obj.material)) {
-          obj.material.forEach((m) => m.dispose());
-        } else {
-          (obj.material as THREE.Material).dispose();
+        if (disposeMaterials) {
+          if (Array.isArray(obj.material)) {
+            obj.material.forEach((m) => m.dispose());
+          } else {
+            (obj.material as THREE.Material).dispose();
+          }
         }
       }
     });
@@ -65,7 +69,8 @@
         depth: extrudeHeight,
         bevelEnabled: false
       });
-      const mat = new THREE.MeshStandardMaterial({ color: 0xffcc00 });
+      const subtype = f.properties?.subtype || 'building_residential';
+      const mat = getBuildingMaterial(subtype);
       const mesh = new THREE.Mesh(geom, mat);
       mesh.position.z = base;
       extrudeGroup.add(mesh);
@@ -85,7 +90,17 @@
         source: 'model-geo',
         filter: ['==', ['get', 'featureType'], 'building'],
         paint: {
-          'fill-extrusion-color': '#b7c9ff',
+          'fill-extrusion-color': [
+            'match',
+            ['get', 'subtype'],
+            'building_commercial',
+            COLORS.building_commercial,
+            'building_industrial',
+            COLORS.building_industrial,
+            'building_residential',
+            COLORS.building_residential,
+            COLORS.building_residential
+          ],
           'fill-extrusion-opacity': 0.9,
           'fill-extrusion-height': ['get', 'height_final'],
           'fill-extrusion-base': ['get', 'base_height']
@@ -98,7 +113,7 @@
         type: 'fill',
         source: 'model-geo',
         filter: ['==', ['get', 'featureType'], 'water'],
-        paint: { 'fill-color': '#a0c8f0', 'fill-opacity': 0.5 }
+        paint: { 'fill-color': COLORS.water, 'fill-opacity': 0.5 }
       });
     }
     if (!map.getLayer('model-green')) {
@@ -107,7 +122,7 @@
         type: 'fill',
         source: 'model-geo',
         filter: ['==', ['get', 'featureType'], 'green'],
-        paint: { 'fill-color': '#b6e3b6', 'fill-opacity': 0.5 }
+        paint: { 'fill-color': COLORS.green, 'fill-opacity': 0.5 }
       });
     }
   }
@@ -163,13 +178,33 @@
               id: routeLayerId,
               type: 'line',
               source: routeSourceId,
-              paint: { 'line-color': '#0066ff', 'line-width': 4 }
+              paint: { 'line-color': COLORS.route, 'line-width': 4 }
             });
           }
         } else {
           if (map.getLayer(routeLayerId)) map.removeLayer(routeLayerId);
           if (map.getSource(routeSourceId)) map.removeSource(routeSourceId);
         }
+      });
+      const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
+      map.on('mousemove', (e) => {
+        const feats = map!.queryRenderedFeatures(e.point, {
+          layers: ['extrude-buildings', 'model-water', 'model-green']
+        });
+        if (feats.length === 0) {
+          popup.remove();
+          return;
+        }
+        const f = feats[0];
+        const p: any = f.properties || {};
+        let html = '';
+        if (p.name) html += `<strong>${p.name}</strong><br/>`;
+        if (p.subtype) html += `${p.subtype}<br/>`;
+        if (p.height_final)
+          html += `Höhe: ${Number(p.height_final).toFixed(1)} m<br/>`;
+        if (p.levels) html += `Stockwerke: ${p.levels}<br/>`;
+        else if (p.height) html += `Höhe Tag: ${p.height}<br/>`;
+        popup.setLngLat(e.lngLat).setHTML(html).addTo(map!);
       });
     });
 
@@ -180,6 +215,7 @@
       mapStore.set(undefined);
       extrudeGroupStore.set(null);
       map?.remove();
+      disposeBuildingMaterials();
     };
   });
 </script>

@@ -1,4 +1,5 @@
 import type * as GeoJSON from 'geojson';
+import { mapBuildingSubtype } from '$lib/constants/palette';
 
 export function buildOverpassQuery(
   elements: string[],
@@ -67,11 +68,13 @@ export function convertTo3D(
       : element.tags?.highway
       ? 'road'
       : 'other';
+    const name = element.tags?.name;
+    const subtype = featureType === 'building' ? mapBuildingSubtype(element.tags) : undefined;
     let height = 0;
     if (featureType === 'building') {
       height = heightRaw * buildingMultiplier + baseHeight;
     }
-    features.push({ id: element.id, type: featureType, geometry: coords, height });
+    features.push({ id: element.id, type: featureType, geometry: coords, height, subtype });
 
     // GeoJSON output for map rendering
     if (featureType === 'building' || featureType === 'water' || featureType === 'green') {
@@ -81,15 +84,22 @@ export function convertTo3D(
       }
       const heightFinal =
         featureType === 'building' ? baseHeight + heightRaw * buildingMultiplier : baseHeight;
+      const props: any = {
+        height_raw: heightRaw,
+        base_height: baseHeight,
+        height_final: heightFinal,
+        featureType,
+        name
+      };
+      if (featureType === 'building') {
+        if (subtype) props.subtype = subtype;
+        if (element.tags?.['building:levels']) props.levels = element.tags['building:levels'];
+        if (element.tags?.height) props.height = element.tags.height;
+      }
       geoFeatures.push({
         type: 'Feature',
         geometry: { type: 'Polygon', coordinates: [poly] },
-        properties: {
-          height_raw: heightRaw,
-          base_height: baseHeight,
-          height_final: heightFinal,
-          featureType
-        }
+        properties: props
       });
     }
   }

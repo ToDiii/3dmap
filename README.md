@@ -109,6 +109,13 @@ Bereiche größer als `OVERPASS_MAX_AREA_KM2` werden automatisch in kleinere Kac
 ### 🏗️ Map-seitige 3D-Extrusion
 Serverseitig berechnete OSM-Gebäude werden zusätzlich als GeoJSON zurückgegeben und in MapLibre via `fill-extrusion` dargestellt. Die Eigenschaften `base_height` und `height_final` enthalten Basishöhe sowie den mit dem UI-Multiplikator verrechneten Endwert. Layer für Gebäude, Wasser und Grünflächen lassen sich in der LayerControl ein- oder ausblenden.
 
+### 🎨 Themenschemata & Legende
+Gebäude erhalten je nach Subtyp (Wohnen, Gewerbe, Industrie) eigene Farben, Wasser- und Grünflächen besitzen ebenfalls feste Farbcodes. Routen werden anhand ihrer Steigung von grün (flach) bis rot (steil) koloriert. Eine Legende in der Seitenleiste erläutert die Zuordnung und zeigt eine kleine Steigungsskala.
+
+![Legende](docs/legend-screenshot.png)
+
+Die Gebäudetypisierung erfolgt heuristisch über OSM-Tags wie `building=*`, `amenity` oder `shop`. Unvollständige Tags können zu nicht klassifizierbaren Gebäuden führen.
+
 ### 📚 Verwendete Technologien
 - [SvelteKit](https://kit.svelte.dev/)
 - [MapLibre GL JS](https://maplibre.org/)
