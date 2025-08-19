@@ -11,13 +11,15 @@
     MapExport,
     ProjectIO,
     Legend,
-    ShareLink
+    ShareLink,
+    SettingsModal
   } from '$lib';
   import { modelMeta, invalidateModel } from '$lib/stores/modelStore';
   import type maplibregl from 'maplibre-gl';
   import { viewModeStore } from '$lib/stores/viewModeStore';
   let map: maplibregl.Map | undefined;
   let showLegend = true;
+  let settingsOpen = false;
 </script>
 
   <div class="flex w-full h-screen">
@@ -31,6 +33,7 @@
       <ProjectIO />
       <ShareLink />
       <MapExport />
+      <button class="w-full p-2 bg-gray-200" on:click={() => (settingsOpen = true)}>Einstellungen</button>
       <label class="flex items-center gap-2">
         <input type="checkbox" bind:checked={showLegend} /> Legende anzeigen
       </label>
@@ -69,3 +72,4 @@
       {/if}
     </div>
   </div>
+  <SettingsModal bind:open={settingsOpen} />

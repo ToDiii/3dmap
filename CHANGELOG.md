@@ -40,6 +40,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - PWA-Unterstützung mit Offline-Caching und Update-Hinweis
 - Build-time generation of PNG PWA icons from SVG using Sharp
 - Teilen von Szenen über komprimierte Permalink-URLs
+- Optionale Fehlertelemetrie mit Sentry und Web-Vitals (Opt-In)
 
 ### Fixed
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest

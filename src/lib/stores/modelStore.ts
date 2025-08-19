@@ -5,6 +5,7 @@ import { modelConfigStore } from './modelConfigStore';
 import { bboxStore } from './bboxStore';
 import { shapeStore } from './shapeStore';
 import { modelGeo } from './modelGeoStore';
+import { telemetryFetch } from '$lib/telemetry/fetch';
 
 export const modelStore = writable<MeshFeature[]>([]);
 export const modelLoading = writable(false);
@@ -22,7 +23,7 @@ async function loadModel(invalidate = false) {
     const elements = Object.entries(cfg.elements)
       .filter(([, v]) => v)
       .map(([k]) => k);
-    const res = await fetch('/api/model', {
+    const res = await telemetryFetch('/api/model', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -71,7 +72,7 @@ export async function loadModelForRoute(
     const elements = Object.entries(cfg.elements)
       .filter(([, v]) => v)
       .map(([k]) => k);
-    const res = await fetch('/api/model', {
+    const res = await telemetryFetch('/api/model', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -17,6 +17,9 @@ import { layerStore } from '$lib/stores/layerStore';
 import { viewModeStore } from '$lib/stores/viewModeStore';
 import { mapStore } from '$lib/stores/map';
 import { browser } from '$app/environment';
+import { settingsStore } from '$lib/stores/settingsStore';
+import { initWebVitals } from '$lib/telemetry/vitals';
+import { ErrorBoundary } from 'svelte';
 let { children } = $props();
 let removeShortcuts: (() => void) | undefined;
 onMount(async () => {
@@ -45,6 +48,13 @@ onMount(async () => {
   mapStore.subscribe((m) => {
     if (m) m.on('moveend', debouncedWrite);
   });
+  let vitalsStarted = false;
+  settingsStore.subscribe((s) => {
+    if (s.telemetryConsent && !vitalsStarted) {
+      vitalsStarted = true;
+      initWebVitals();
+    }
+  });
 });
 onDestroy(() => {
   removeShortcuts && removeShortcuts();
@@ -59,7 +69,15 @@ function reload() {
 <link rel="apple-touch-icon" sizes="180x180" href="/icons-gen/apple-touch-icon-180.png" />
 <meta name="theme-color" content="#111111" />
 </svelte:head>
-{@render children?.()}
+<ErrorBoundary let:error>
+  {@render children?.()}
+  <svelte:fragment slot="fallback">
+    <div class="error-boundary">
+      <p>Ein Fehler ist aufgetreten.</p>
+      <button on:click={reload}>Neu laden</button>
+    </div>
+  </svelte:fragment>
+</ErrorBoundary>
 <CommandPalette />
 <ShortcutHelp />
 {#if $updateAvailable}
@@ -83,5 +101,14 @@ function reload() {
     padding: 0.2rem 0.5rem;
     border: none;
     border-radius: 3px;
+  }
+  .error-boundary {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 1rem;
+    border: 1px solid #ccc;
   }
 </style>
