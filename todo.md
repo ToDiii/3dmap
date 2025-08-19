@@ -147,3 +147,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: Routing aus Adressen
 [x] Feature: MapLibre 3D-Extrusion mit serverseitiger Höhenberechnung
 [x] Overpass-Robustheit & Tile-Splitting
+[x] Feature: Höhenprofil & Routenkorridor

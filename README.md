@@ -58,6 +58,19 @@ Aktivieren:
 ### 🗺️ Routing aus Adressen
 Die Anwendung unterstützt das Berechnen von Routen aus mehreren Adressen. Die Geokodierung erfolgt über den in `GEOCODE_PROVIDER` festgelegten Dienst (nominatim, opencage oder mapbox). Der Routingdienst wird über `ROUTING_PROVIDER` gewählt (openrouteservice, osrm oder graphhopper). API‑Schlüssel können über `GEOCODE_API_KEY` und `ROUTING_API_KEY` gesetzt werden. Pro Route sind maximal `ROUTING_MAX_WAYPOINTS` Wegpunkte erlaubt. Beachten Sie die Nutzungsbedingungen und Rate-Limits der jeweiligen Anbieter.
 
+### 🏔️ Höhenprofil & Routenkorridor
+Die Anwendung kann Höhenprofile entlang berechneter Routen erstellen und die 3D-Route an das Gelände anpassen. Die folgenden Umgebungsvariablen steuern das Verhalten:
+
+| Variable | Beschreibung | Default |
+|---|---|---|
+| `ELEVATION_PROVIDER` | Höhenanbieter (`opentopodata`, `open-elevation`, `mapbox-terrain`) | `opentopodata` |
+| `ELEVATION_API_KEY` | API-Key (falls vom Anbieter verlangt) | - |
+| `ELEVATION_BATCH_SIZE` | Punkte pro Anfrage | `100` |
+| `ELEVATION_MAX_SAMPLES` | Maximale Stützpunkte entlang der Route | `2000` |
+| `ROUTE_BUFFER_METERS` | Standardbreite des Routenkorridors für OSM-Daten | `75` |
+
+Nach der Routenberechnung wird automatisch ein Korridor (Buffer) erzeugt, aus dem OSM-Features für das 3D-Modell geladen werden. Bei Ausfällen des Höhenproviders wird die Route ohne Profil angezeigt.
+
 ### 🌐 Overpass-Konfiguration
 Die serverseitigen Overpass-Abfragen werden über Umgebungsvariablen gesteuert. Wichtige Variablen:
 

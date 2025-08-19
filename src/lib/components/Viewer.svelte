@@ -9,6 +9,7 @@
   import { modelConfigStore } from '$lib/stores/modelConfigStore';
   import { pathStore } from '$lib/stores/pathStore';
   import { modelStore, modelLoading, modelError } from '$lib/stores/modelStore';
+  import { routeStore } from '$lib/stores/routeStore';
   import type { MeshFeature } from '$lib/utils/convertTo3D';
 
   let container: HTMLDivElement;
@@ -24,6 +25,7 @@
   let currentScale = 1;
   let currentBaseHeight = 0;
   let path: GeoJSON.LineString | null = null;
+  let elevations: number[] | undefined;
   let isLoading = false;
 
   function buildPathGeometry(
@@ -33,9 +35,10 @@
   ) {
     clearGroup(pathGroup);
     if (!p || p.coordinates.length < 2) return;
-    const pts = p.coordinates.map(
-      ([lon, lat]) => new THREE.Vector3(lon * scale, baseHeight + 0.1, lat * scale)
-    );
+    const pts = p.coordinates.map(([lon, lat], i) => {
+      const elev = elevations?.[i] ?? 0;
+      return new THREE.Vector3(lon * scale, baseHeight + elev + 0.1, lat * scale);
+    });
     const curve = new THREE.CatmullRomCurve3(pts);
     const geom = new THREE.TubeGeometry(curve, Math.max(2, pts.length * 3), 0.5, 8, false);
     const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
@@ -255,6 +258,10 @@
       path = v;
       buildPathGeometry(path, currentBaseHeight, currentScale);
     });
+    const unsubRoute = routeStore.subscribe((s) => {
+      elevations = s.elevations;
+      buildPathGeometry(path, currentBaseHeight, currentScale);
+    });
 
     window.addEventListener('resize', onResize);
     animate();
@@ -265,6 +272,7 @@
       unsubLoading();
       unsubError();
       unsubPath();
+      unsubRoute();
       window.removeEventListener('resize', onResize);
       controls.dispose();
       renderer.dispose();

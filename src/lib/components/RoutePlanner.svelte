@@ -4,11 +4,16 @@
   import { geocodeAddress } from '$lib/services/geocode';
   import { routeWaypoints } from '$lib/services/route';
   import { lineStringToGpx } from '$lib/utils/gpx';
-  import { ROUTING_MAX_WAYPOINTS } from '$lib/config/env';
+  import { ROUTING_MAX_WAYPOINTS, ROUTE_BUFFER_METERS } from '$lib/config/env';
+  import { loadModelForRoute } from '$lib/stores/modelStore';
+  import ElevationChart from './ElevationChart.svelte';
 
   let loadingId: string | null = null;
   let routing = false;
   let error: string | null = null;
+  let elevLoading = false;
+  let elevError: string | null = null;
+  let loadCorridor = true;
   const suggestions: Record<string, { lat: number; lon: number; label: string }[]> = {};
   const timers: Record<string, any> = {};
 
@@ -49,6 +54,17 @@
       if (coords.length < 2) throw new Error('need at least two waypoints');
       const res = await routeWaypoints(coords);
       routeStore.setRoute(res.geometry, res.distanceKm, res.durationMin);
+      elevLoading = true;
+      try {
+        await routeStore.enrichRouteWithElevation(res.geometry);
+        if (loadCorridor) {
+          await loadModelForRoute(res.geometry, ROUTE_BUFFER_METERS);
+        }
+        elevError = null;
+      } catch (e) {
+        elevError = 'H\u00f6henprofil nicht verf\u00fcgbar';
+      }
+      elevLoading = false;
     } catch (e) {
       error = 'Routing fehlgeschlagen';
     }
@@ -138,6 +154,23 @@
   {/if}
   {#if $routeStore.durationMin}
     <p class="text-sm">Dauer: {$routeStore.durationMin?.toFixed(1)} min</p>
+  {/if}
+  <div class="flex items-center space-x-2">
+    <input type="checkbox" bind:checked={loadCorridor} id="corridor" />
+    <label for="corridor" class="text-sm">Korridor-Modell laden</label>
+  </div>
+  {#if elevLoading}
+    <p class="text-sm">H\u00f6henprofil wird geladen...</p>
+  {/if}
+  {#if elevError}
+    <p class="text-sm text-red-600">{elevError}</p>
+  {/if}
+  {#if $routeStore.elevations}
+    <ElevationChart
+      elevations={$routeStore.elevations}
+      stats={$routeStore.elevationStats}
+      distanceKm={$routeStore.distanceKm}
+    />
   {/if}
   {#if error}
     <p class="text-sm text-red-600">{error}</p>
