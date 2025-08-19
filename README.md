@@ -57,7 +57,7 @@ docker run -p 3000:3000 \
   -e GEOCODE_PROVIDER=nominatim \
   -e ELEVATION_PROVIDER=opentopodata \
   ghcr.io/todiii/3dmap:latest
-  ```
+```
 
 - Optional: Volume für Cache
 

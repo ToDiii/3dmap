@@ -27,6 +27,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -42,12 +44,12 @@ jobs:
       - name: Determine tags
         id: meta
         run: |
-          IMAGE_NAME="ghcr.io/${GITHUB_REPOSITORY,,}"
+          IMAGE_NAME_LC="${IMAGE_NAME,,}"
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/}"
-            echo "tags=${IMAGE_NAME}:${VERSION},${IMAGE_NAME}:latest" >> $GITHUB_OUTPUT
+            echo "tags=${IMAGE_NAME_LC}:${VERSION},${IMAGE_NAME_LC}:latest" >> $GITHUB_OUTPUT
           else
-            echo "tags=${IMAGE_NAME}:latest" >> $GITHUB_OUTPUT
+            echo "tags=${IMAGE_NAME_LC}:latest" >> $GITHUB_OUTPUT
           fi
       - name: Build and push
         uses: docker/build-push-action@v6
