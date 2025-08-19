@@ -37,6 +37,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Dokumentation zum Ausführen des Containers via Docker
 - Serverseitige Proxies für Geocoding und Routing mit Caching, Rate-Limiting und Retry
 - PWA-Unterstützung mit Offline-Caching und Update-Hinweis
+- Build-time generation of PNG PWA icons from SVG using Sharp
 
 ### Fixed
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest
