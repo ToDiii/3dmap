@@ -52,6 +52,19 @@ function getNumberEnv(name: string, def: number): number {
   return val;
 }
 
+function getBoolEnv(name: string, def: boolean): boolean {
+  const raw = getEnv(name);
+  if (raw === undefined) return def;
+  return raw.toLowerCase() === 'true';
+}
+
+function getFloatEnv(name: string, def: number): number {
+  const raw = getEnv(name);
+  const val = raw ? parseFloat(raw) : def;
+  if (isNaN(val) || val < 0 || val > 1) throw new Error(`Invalid ${name}`);
+  return val;
+}
+
 export const ELEVATION_BATCH_SIZE = getNumberEnv('ELEVATION_BATCH_SIZE', 100);
 export const ELEVATION_MAX_SAMPLES = getNumberEnv('ELEVATION_MAX_SAMPLES', 2000);
 export const ROUTE_BUFFER_METERS = getNumberEnv('ROUTE_BUFFER_METERS', 75);
@@ -62,3 +75,10 @@ export const TILE_CACHE_ALLOWLIST = tileCacheAllowlistRaw
   : [];
 
 export const PWA_ENABLED = (getEnv('PWA_ENABLED') ?? 'false').toLowerCase() === 'true';
+
+export const TELEMETRY_ENABLED = getBoolEnv('TELEMETRY_ENABLED', false);
+export const SENTRY_DSN: string | undefined = getEnv('SENTRY_DSN');
+export const SENTRY_ENV = getEnv('SENTRY_ENV') ?? 'production';
+export const SENTRY_SAMPLE_RATE = getFloatEnv('SENTRY_SAMPLE_RATE', 0.2);
+export const SENTRY_TRACES_SAMPLE_RATE = getFloatEnv('SENTRY_TRACES_SAMPLE_RATE', 0.1);
+export const APP_RELEASE: string | undefined = getEnv('APP_RELEASE');

@@ -59,6 +59,18 @@ docker run -p 3000:3000 \
   ghcr.io/todiii/3dmap:latest
 ```
 
+- Telemetrie aktivieren:
+
+```bash
+docker run -p 3000:3000 \
+  -e TELEMETRY_ENABLED=true \
+  -e SENTRY_DSN=https://… \
+  -e SENTRY_ENV=production \
+  -e SENTRY_SAMPLE_RATE=0.2 \
+  -e SENTRY_TRACES_SAMPLE_RATE=0.1 \
+  ghcr.io/todiii/3dmap:latest
+```
+
 - Optional: Volume für Cache
 
 ```bash
@@ -77,6 +89,10 @@ Die Anwendung unterstützt zahlreiche Tastenkürzel.
 ```bash
 npm test
 ```
+
+### 📊 Telemetry/Privacy
+
+Die Anwendung sendet Fehler und Web-Vitals nur nach ausdrücklicher Zustimmung im Einstellungsdialog. Standardmäßig ist die Telemetrie deaktiviert. Weitere Details stehen in [PRIVACY.md](./PRIVACY.md).
 
 #### E2E-Tests (optional)
 Standardmäßig sind E2E-Tests deaktiviert.
