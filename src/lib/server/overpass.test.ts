@@ -100,5 +100,39 @@ describe('convertTo3D', () => {
     expect(res.features).toHaveLength(0);
     expect(res.geojson.features).toHaveLength(0);
   });
+
+  it('applies minimum building height', () => {
+    const b = {
+      id: 10,
+      geometry: [
+        { lon: 0, lat: 0 },
+        { lon: 0, lat: 1 },
+        { lon: 1, lat: 1 },
+        { lon: 1, lat: 0 }
+      ],
+      tags: { building: 'yes', height: '0' }
+    };
+    const res = convertTo3D({ elements: [b] }, 100, 0, 1, 0, undefined, 5);
+    expect(res.features[0].height).toBeCloseTo(0.005, 3);
+  });
+
+  it('clips buildings outside polygon', () => {
+    const b = {
+      id: 11,
+      geometry: [
+        { lon: 2, lat: 2 },
+        { lon: 2, lat: 3 },
+        { lon: 3, lat: 3 },
+        { lon: 3, lat: 2 }
+      ],
+      tags: { building: 'yes', height: '0' }
+    };
+    const clip: GeoJSON.Polygon = {
+      type: 'Polygon',
+      coordinates: [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
+    };
+    const res = convertTo3D({ elements: [b] }, 100, 0, 1, 0, clip, 5);
+    expect(res.features).toHaveLength(0);
+  });
 });
 

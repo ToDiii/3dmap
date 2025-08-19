@@ -10,6 +10,9 @@
   import { pathStore } from '$lib/stores/pathStore';
   import { modelStore, modelLoading, modelError } from '$lib/stores/modelStore';
   import { routeStore } from '$lib/stores/routeStore';
+  import { uiConfigStore } from '$lib/stores/uiConfigStore';
+  import { colorPalette } from '$lib/stores/colorPalette';
+  import { get } from 'svelte/store';
   import type { MeshFeature } from '$lib/utils/convertTo3D';
   import {
     getBuildingMaterial,
@@ -26,6 +29,12 @@
   let modelGroup: THREE.Group = new THREE.Group();
   let pathGroup: THREE.Group = new THREE.Group();
   let ground: THREE.Object3D | undefined;
+  let baseMesh: THREE.Mesh | undefined;
+  let frameMesh: THREE.Mesh | undefined;
+  let uiCfg = get(uiConfigStore);
+  let palette = get(colorPalette);
+  uiConfigStore.subscribe((v) => (uiCfg = v));
+  colorPalette.subscribe((v) => (palette = v));
   let toastMessage: string | null = null;
   let loadError: string | null = null;
   let currentScale = 1;
@@ -256,6 +265,18 @@
       scene.remove(ground);
       ground = undefined;
     }
+    if (baseMesh) {
+      scene.remove(baseMesh);
+      baseMesh.geometry.dispose();
+      (baseMesh.material as THREE.Material).dispose();
+      baseMesh = undefined;
+    }
+    if (frameMesh) {
+      scene.remove(frameMesh);
+      frameMesh.geometry.dispose();
+      (frameMesh.material as THREE.Material).dispose();
+      frameMesh = undefined;
+    }
     if (!meshes || meshes.length === 0) {
       loadError = 'Keine Features geladen';
       return;
@@ -269,7 +290,8 @@
       modelGroup.add(mesh);
     }
     const box = new THREE.Box3().setFromObject(modelGroup);
-    const size = box.getSize(new THREE.Vector3()).length();
+    const sizeVec = box.getSize(new THREE.Vector3());
+    const size = sizeVec.length();
     const sphere = box.getBoundingSphere(new THREE.Sphere());
     if (sphere && isFinite(sphere.radius)) {
       camera.position.set(
@@ -280,11 +302,56 @@
       controls.target.copy(sphere.center);
       controls.update();
     }
-    const gridSize = size || 100;
-    const grid = new THREE.GridHelper(gridSize, 20);
-    grid.position.y = baseHeight;
-    ground = grid;
-    scene.add(grid);
+    const width = sizeVec.x;
+    const depth = sizeVec.z;
+    if (uiCfg.baseLayerMM > 0) {
+      const extra = 0.01;
+      const geom = new THREE.BoxGeometry(
+        width * (1 + extra),
+        uiCfg.baseLayerMM / 1000,
+        depth * (1 + extra)
+      );
+      const mat = new THREE.MeshStandardMaterial({ color: palette.base });
+      baseMesh = new THREE.Mesh(geom, mat);
+      baseMesh.position.set(
+        box.min.x + width / 2,
+        baseHeight - uiCfg.baseLayerMM / 1000,
+        box.min.z + depth / 2
+      );
+      scene.add(baseMesh);
+    } else {
+      const gridSize = size || 100;
+      const grid = new THREE.GridHelper(gridSize, 20);
+      grid.position.y = baseHeight;
+      ground = grid;
+      scene.add(grid);
+    }
+    if (uiCfg.frame.enabled) {
+      const outerW = width + (uiCfg.frame.thicknessMM / 1000) * 2;
+      const outerD = depth + (uiCfg.frame.thicknessMM / 1000) * 2;
+      const shape = new THREE.Shape([
+        new THREE.Vector2(-outerW / 2, -outerD / 2),
+        new THREE.Vector2(outerW / 2, -outerD / 2),
+        new THREE.Vector2(outerW / 2, outerD / 2),
+        new THREE.Vector2(-outerW / 2, outerD / 2)
+      ]);
+      const hole = new THREE.Path([
+        new THREE.Vector2(-width / 2, -depth / 2),
+        new THREE.Vector2(width / 2, -depth / 2),
+        new THREE.Vector2(width / 2, depth / 2),
+        new THREE.Vector2(-width / 2, depth / 2)
+      ]);
+      shape.holes.push(hole);
+      const geom = new THREE.ExtrudeGeometry(shape, {
+        depth: uiCfg.frame.heightMM / 1000,
+        bevelEnabled: false
+      });
+      geom.rotateX(-Math.PI / 2);
+      geom.translate(box.min.x + width / 2, baseHeight, box.min.z + depth / 2);
+      const mat = new THREE.MeshStandardMaterial({ color: palette.frame });
+      frameMesh = new THREE.Mesh(geom, mat);
+      scene.add(frameMesh);
+    }
     buildPathGeometry(path, baseHeight, scale);
     loadError = null;
   }

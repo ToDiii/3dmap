@@ -38,6 +38,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Dokumentation zum Ausführen des Containers via Docker
 - Serverseitige Proxies für Geocoding und Routing mit Caching, Rate-Limiting und Retry
 - PWA-Unterstützung mit Offline-Caching und Update-Hinweis
+- Map2Model-Projektimport, Basisplatte/Rahmen, Mindestgebäudehöhe und serverseitiger Zuschnitt
 - Build-time generation of PNG PWA icons from SVG using Sharp
 - Teilen von Szenen über komprimierte Permalink-URLs
 - Optionale Fehlertelemetrie mit Sentry und Web-Vitals (Opt-In)
@@ -48,6 +49,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Replaced PNG PWA icons with SVG placeholders to avoid binary files
 - Fix: lz-string SSR default import; removed direct lz-string imports in components
 - Fix: Removed invalid ErrorBoundary usage; added SvelteKit +error.svelte; favicon link now points to generated PNG
+- Fix: Polygon-Import und Kartenausdehnung beim Projektladen
 
 ---
 
