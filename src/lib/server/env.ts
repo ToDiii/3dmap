@@ -7,6 +7,7 @@ export interface Env {
   OVERPASS_TILE_DEG: number;
   OVERPASS_CONCURRENCY: number;
   OVERPASS_USER_AGENT: string;
+  ROUTE_BUFFER_METERS: number;
 }
 
 function parseNumber(value: string | undefined, fallback: number): number {
@@ -26,5 +27,6 @@ export const env: Env = {
   OVERPASS_MAX_AREA_KM2: parseNumber(process.env.OVERPASS_MAX_AREA_KM2, 25),
   OVERPASS_TILE_DEG: parseNumber(process.env.OVERPASS_TILE_DEG, 0.05),
   OVERPASS_CONCURRENCY: parseNumber(process.env.OVERPASS_CONCURRENCY, 1),
-  OVERPASS_USER_AGENT: process.env.OVERPASS_USER_AGENT || '3dmap/1.0 (+contact@example.com)'
+  OVERPASS_USER_AGENT: process.env.OVERPASS_USER_AGENT || '3dmap/1.0 (+contact@example.com)',
+  ROUTE_BUFFER_METERS: parseNumber(process.env.ROUTE_BUFFER_METERS, 75)
 };

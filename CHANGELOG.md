@@ -31,6 +31,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Routing aus Adressen inkl. Geokodierung, Wegpunktlimit und GPX-Export
 - Resiliente Overpass-Abfragen mit konfigurierbaren Endpoints, Timeout, Retries und In-Flight-Dedupe
 - Tile-Splitting für große Gebiete inklusive Deduplizierung und Debug-Metadaten
+- Höhenprofil für Routen inkl. Geländeauffahrung und OSM-Korridor
 
 ### Fixed
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest

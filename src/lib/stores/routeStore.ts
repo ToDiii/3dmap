@@ -12,6 +12,8 @@ interface RouteState {
   route: GeoJSON.LineString | null;
   distanceKm?: number;
   durationMin?: number;
+  elevations?: number[];
+  elevationStats?: { min: number; max: number; gain: number; loss: number };
 }
 
 function createRouteStore() {
@@ -56,8 +58,35 @@ function createRouteStore() {
     resetRoute: () =>
       update((s) => {
         pathStore.set(null);
-        return { ...s, route: null, distanceKm: undefined, durationMin: undefined };
+        return {
+          ...s,
+          route: null,
+          distanceKm: undefined,
+          durationMin: undefined,
+          elevations: undefined,
+          elevationStats: undefined
+        };
       }),
+    async enrichRouteWithElevation(line: GeoJSON.LineString) {
+      const { densifyLine, sampleElevation, statsFromElevations } = await import(
+        '$lib/services/elevation'
+      );
+      const { ELEVATION_MAX_SAMPLES } = await import('$lib/config/env');
+      const target = Math.min(ELEVATION_MAX_SAMPLES, line.coordinates.length * 10);
+      const densified = densifyLine(line, target);
+      try {
+        const elev = await sampleElevation(densified);
+        const stats = statsFromElevations(elev);
+        update((s) => {
+          const newLine: GeoJSON.LineString = { type: 'LineString', coordinates: densified };
+          pathStore.set(newLine);
+          return { ...s, route: newLine, elevations: elev, elevationStats: stats };
+        });
+      } catch (err) {
+        console.error('elevation failed', err);
+        update((s) => ({ ...s, elevations: undefined, elevationStats: undefined }));
+      }
+    },
     set
   };
 }

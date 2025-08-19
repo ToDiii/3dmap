@@ -3,6 +3,8 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { buildOverpassQuery, convertTo3D } from '$lib/server/overpass';
 import { parsePolygon } from '$lib/server/polygon';
+import { bufferLine } from '$lib/geo/buffer';
+import type * as GeoJSON from 'geojson';
 import { env } from '$lib/server/env';
 import {
   polygonAreaKm2,
@@ -69,6 +71,8 @@ export const POST: RequestHandler = async ({ request }) => {
     elements,
     bbox,
     shape,
+    route,
+    routeBufferMeters,
     invalidate = false
   } = payload || {};
 
@@ -81,25 +85,36 @@ export const POST: RequestHandler = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Invalid polygon' }), { status: 400 });
   }
 
+  let routePolygon: GeoJSON.Polygon | undefined;
+  if (route && !polygon && !bbox) {
+    try {
+      routePolygon = bufferLine(route, routeBufferMeters || env.ROUTE_BUFFER_METERS);
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid route' }), { status: 400 });
+    }
+  }
+
   const baseKey = createCacheKey({
     scale,
     baseHeight,
     buildingMultiplier,
     minArea,
     elements,
-    shape: polygon,
-    bbox
+    shape: polygon || routePolygon,
+    bbox,
+    routeBufferMeters
   });
 
   // determine tiling
   let tiles: Array<[number, number, number, number]> = [];
   let usePolygon = false;
-  if (polygon) {
-    const area = polygonAreaKm2(polygon);
+  const polyForArea = polygon || routePolygon;
+  if (polyForArea) {
+    const area = polygonAreaKm2(polyForArea);
     if (area > env.OVERPASS_MAX_AREA_KM2) {
-      tiles = splitPolygonToBboxes(polygon, env.OVERPASS_TILE_DEG);
+      tiles = splitPolygonToBboxes(polyForArea, env.OVERPASS_TILE_DEG);
     } else {
-      tiles = [polygonToBbox(polygon)];
+      tiles = [polygonToBbox(polyForArea)];
       usePolygon = true;
     }
   } else if (bbox) {
@@ -134,7 +149,11 @@ export const POST: RequestHandler = async ({ request }) => {
       tileResult = CACHE.get(tileKey);
     } else {
       cacheHit = false;
-      const query = buildOverpassQuery(elements, tile, usePolygon ? polygon : undefined);
+      const query = buildOverpassQuery(
+        elements,
+        tile,
+        usePolygon ? polyForArea : undefined
+      );
       let data;
       try {
         const res = await fetchOverpass(query);
