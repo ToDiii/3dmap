@@ -89,17 +89,18 @@ export async function applyState(scene: SceneState): Promise<void> {
     }
   });
 
-  if (scene.layers) layerStore.set(scene.layers);
+    if (scene.layers)
+      layerStore.set({ buildings3d: true, water: true, green: true, ...scene.layers });
 
   if (scene.shape) {
-    if ('bbox' in scene.shape) {
-      const [west, south, east, north] = scene.shape.bbox;
-      bboxStore.set([south, west, north, east]);
-      shapeStore.set(null);
-    } else {
-      shapeStore.set(scene.shape);
-      bboxStore.set(null);
-    }
+      if ('bbox' in scene.shape && scene.shape.bbox) {
+        const [west, south, east, north] = scene.shape.bbox;
+        bboxStore.set([south, west, north, east]);
+        shapeStore.set(null);
+      } else {
+        shapeStore.set(scene.shape as GeoJSON.Polygon);
+        bboxStore.set(null);
+      }
   }
 
   if (scene.route) {

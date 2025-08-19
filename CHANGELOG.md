@@ -46,6 +46,8 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest
 - GHCR release workflow uses lowercase image tags to satisfy registry requirements
 - Replaced PNG PWA icons with SVG placeholders to avoid binary files
+- Fix: lz-string SSR default import; removed direct lz-string imports in components
+- Fix: Removed invalid ErrorBoundary usage; added SvelteKit +error.svelte; favicon link now points to generated PNG
 
 ---
 

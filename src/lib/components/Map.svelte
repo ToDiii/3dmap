@@ -187,7 +187,7 @@
         }
       });
       const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
-      map.on('mousemove', (e) => {
+      map!.on('mousemove', (e) => {
         const feats = map!.queryRenderedFeatures(e.point, {
           layers: ['extrude-buildings', 'model-water', 'model-green']
         });

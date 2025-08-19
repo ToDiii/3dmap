@@ -88,15 +88,16 @@
   ) {
     clearGroup(pathGroup, true);
     if (!p || p.coordinates.length < 2) return;
+    const coords = p.coordinates as [number, number][];
     const pts: THREE.Vector3[] = [];
     const grades: number[] = [];
-    for (let i = 0; i < p.coordinates.length; i++) {
-      const [lon, lat] = p.coordinates[i];
+    for (let i = 0; i < coords.length; i++) {
+      const [lon, lat] = coords[i];
       const elev = elevations?.[i] ?? 0;
       pts.push(new THREE.Vector3(lon * scale, baseHeight + elev + 0.1, lat * scale));
-      if (i < p.coordinates.length - 1) {
+      if (i < coords.length - 1) {
         const elev2 = elevations?.[i + 1] ?? elev;
-        const dist = haversine(p.coordinates[i], p.coordinates[i + 1]);
+        const dist = haversine(coords[i], coords[i + 1]);
         const grade = dist === 0 ? 0 : (elev2 - elev) / dist;
         grades.push(grade);
       }

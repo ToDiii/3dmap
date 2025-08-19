@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { serialize, deserialize, MAX_STATE_SIZE } from './serialize';
 import type { SceneState } from './schema';
-import { compressToEncodedURIComponent } from 'lz-string';
+import LZString from 'lz-string';
+const { compressToEncodedURIComponent } = LZString;
 
 describe('state serialization', () => {
   const baseState: SceneState = {

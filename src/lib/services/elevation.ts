@@ -96,7 +96,7 @@ export function densifyLine(
   line: GeoJSON.LineString,
   targetSamples: number
 ): Array<[number, number]> {
-  const coords = line.coordinates;
+  const coords = line.coordinates as [number, number][];
   if (coords.length >= targetSamples) return coords.slice();
   const distances: number[] = [0];
   for (let i = 1; i < coords.length; i++) {

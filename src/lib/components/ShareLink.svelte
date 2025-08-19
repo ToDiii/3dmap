@@ -2,10 +2,12 @@
   import { collectCurrentState } from '$lib/state/bridge';
   import { serialize, MAX_STATE_SIZE } from '$lib/state/serialize';
   import { writeToUrl } from '$lib/state/url';
+  import { browser } from '$app/environment';
   let notice: string | null = null;
   let length = 0;
 
   async function copyLink() {
+    if (!browser) return;
     const s = serialize(collectCurrentState());
     length = s.length;
     writeToUrl(s, true);

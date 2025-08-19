@@ -5,7 +5,7 @@ import sharp from 'sharp';
 const SRC = 'static/icons/app.svg';
 const OUT = 'static/icons-gen';
 
-const sizes = [48,72,96,128,144,152,180,192,256,384,512];
+const sizes = [32,48,72,96,128,144,152,180,192,256,384,512];
 
 async function ensureDir(dir) {
   await fs.mkdir(dir, { recursive: true });

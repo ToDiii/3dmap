@@ -1,6 +1,5 @@
 <script lang="ts">
 import '../app.css';
-import favicon from '$lib/assets/favicon.svg';
 import { onMount, onDestroy } from 'svelte';
 import CommandPalette from '$lib/components/CommandPalette.svelte';
 import ShortcutHelp from '$lib/components/ShortcutHelp.svelte';
@@ -19,7 +18,6 @@ import { mapStore } from '$lib/stores/map';
 import { browser } from '$app/environment';
 import { settingsStore } from '$lib/stores/settingsStore';
 import { initWebVitals } from '$lib/telemetry/vitals';
-import { ErrorBoundary } from 'svelte';
 let { children } = $props();
 let removeShortcuts: (() => void) | undefined;
 onMount(async () => {
@@ -64,20 +62,12 @@ function reload() {
 }
 </script>
 <svelte:head>
-<link rel="icon" href={favicon} />
+<link rel="icon" type="image/png" href="/icons-gen/icon-32.png" />
 <link rel="manifest" href="/manifest.webmanifest" />
 <link rel="apple-touch-icon" sizes="180x180" href="/icons-gen/apple-touch-icon-180.png" />
 <meta name="theme-color" content="#111111" />
 </svelte:head>
-<ErrorBoundary let:error>
-  {@render children?.()}
-  <svelte:fragment slot="fallback">
-    <div class="error-boundary">
-      <p>Ein Fehler ist aufgetreten.</p>
-      <button on:click={reload}>Neu laden</button>
-    </div>
-  </svelte:fragment>
-</ErrorBoundary>
+{@render children?.()}
 <CommandPalette />
 <ShortcutHelp />
 {#if $updateAvailable}
@@ -101,14 +91,5 @@ function reload() {
     padding: 0.2rem 0.5rem;
     border: none;
     border-radius: 3px;
-  }
-  .error-boundary {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    padding: 1rem;
-    border: 1px solid #ccc;
   }
 </style>
