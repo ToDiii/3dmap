@@ -151,4 +151,4 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Feature: Thematische Schemata, Legende und Hover-Infos
 [x] CI/CD: Docker-Build & Release-Workflow über GHCR
 [x] Server-Proxies für Geocoding & Routing
-[x] Feature: PWA support & offline caching
+[x] Build: PNG-Icons werden zur Build-Zeit aus SVG generiert

@@ -14,7 +14,8 @@ function reload() {
 <svelte:head>
 <link rel="icon" href={favicon} />
 <link rel="manifest" href="/manifest.webmanifest" />
-<meta name="theme-color" content="#000000" />
+<link rel="apple-touch-icon" sizes="180x180" href="/icons-gen/apple-touch-icon-180.png" />
+<meta name="theme-color" content="#111111" />
 </svelte:head>
 {@render children?.()}
 {#if $updateAvailable}
