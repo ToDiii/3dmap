@@ -8,6 +8,13 @@ export interface Env {
   OVERPASS_CONCURRENCY: number;
   OVERPASS_USER_AGENT: string;
   ROUTE_BUFFER_METERS: number;
+  GEOCODE_CACHE_TTL_MS: number;
+  GEOCODE_CACHE_MAX_ENTRIES: number;
+  ROUTING_CACHE_TTL_MS: number;
+  ROUTING_CACHE_MAX_ENTRIES: number;
+  API_RATE_LIMIT_PER_MIN: number;
+  SERVER_RETRY_BASE_MS: number;
+  SERVER_MAX_RETRIES: number;
 }
 
 function parseNumber(value: string | undefined, fallback: number): number {
@@ -28,5 +35,12 @@ export const env: Env = {
   OVERPASS_TILE_DEG: parseNumber(process.env.OVERPASS_TILE_DEG, 0.05),
   OVERPASS_CONCURRENCY: parseNumber(process.env.OVERPASS_CONCURRENCY, 1),
   OVERPASS_USER_AGENT: process.env.OVERPASS_USER_AGENT || '3dmap/1.0 (+contact@example.com)',
-  ROUTE_BUFFER_METERS: parseNumber(process.env.ROUTE_BUFFER_METERS, 75)
+  ROUTE_BUFFER_METERS: parseNumber(process.env.ROUTE_BUFFER_METERS, 75),
+  GEOCODE_CACHE_TTL_MS: parseNumber(process.env.GEOCODE_CACHE_TTL_MS, 86_400_000),
+  GEOCODE_CACHE_MAX_ENTRIES: parseNumber(process.env.GEOCODE_CACHE_MAX_ENTRIES, 5000),
+  ROUTING_CACHE_TTL_MS: parseNumber(process.env.ROUTING_CACHE_TTL_MS, 3_600_000),
+  ROUTING_CACHE_MAX_ENTRIES: parseNumber(process.env.ROUTING_CACHE_MAX_ENTRIES, 2000),
+  API_RATE_LIMIT_PER_MIN: parseNumber(process.env.API_RATE_LIMIT_PER_MIN, 120),
+  SERVER_RETRY_BASE_MS: parseNumber(process.env.SERVER_RETRY_BASE_MS, 400),
+  SERVER_MAX_RETRIES: parseNumber(process.env.SERVER_MAX_RETRIES, 2)
 };

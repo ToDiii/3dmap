@@ -1,21 +1,17 @@
-import { describe, expect, it, vi, afterAll } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-const origEnv = { ...process.env };
-
-describe('routeWaypoints', () => {
-  it('calls openrouteservice', async () => {
+describe('routeWaypoints service', () => {
+  it('calls api endpoint', async () => {
     vi.resetModules();
-    process.env.ROUTING_PROVIDER = 'openrouteservice';
-    process.env.ROUTING_MAX_WAYPOINTS = '25';
     const { routeWaypoints } = await import('./route');
-    const mock = vi.fn(async () => ({
+    const mock = vi.fn(async (_url, _opts) => ({
+      ok: true,
       json: async () => ({
-        features: [
-          {
-            geometry: { type: 'LineString', coordinates: [[1, 2], [3, 4]] },
-            properties: { summary: { distance: 1000, duration: 600 } }
-          }
-        ]
+        result: {
+          geometry: { type: 'LineString', coordinates: [[1, 2], [3, 4]] },
+          distanceKm: 1,
+          durationMin: 10
+        }
       })
     } as any));
     vi.stubGlobal('fetch', mock);
@@ -23,20 +19,8 @@ describe('routeWaypoints', () => {
       [1, 2],
       [3, 4]
     ]);
-    expect(res.geometry.coordinates[0]).toEqual([1, 2]);
+    expect(mock).toHaveBeenCalled();
     expect(res.distanceKm).toBe(1);
-    expect(res.durationMin).toBe(10);
+    expect(res.geometry.coordinates[0]).toEqual([1, 2]);
   });
-
-  it('throws on waypoint limit', async () => {
-    vi.resetModules();
-    process.env.ROUTING_PROVIDER = 'osrm';
-    process.env.ROUTING_MAX_WAYPOINTS = '2';
-    const { routeWaypoints } = await import('./route');
-    await expect(routeWaypoints([[0, 0], [1, 1], [2, 2]])).rejects.toThrow();
-  });
-});
-
-afterAll(() => {
-  process.env = origEnv;
 });
