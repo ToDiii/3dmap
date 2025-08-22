@@ -75,6 +75,7 @@ export const POST: RequestHandler = async ({ request }) => {
     shape,
     route,
     routeBufferMeters,
+    corridorOnly = false,
     invalidate = false
   } = payload || {};
 
@@ -106,13 +107,14 @@ export const POST: RequestHandler = async ({ request }) => {
     elements,
     shape: polygon || routePolygon,
     bbox,
-    routeBufferMeters
+    routeBufferMeters,
+    corridorOnly
   });
 
   // determine tiling
   let tiles: Array<[number, number, number, number]> = [];
   let usePolygon = false;
-  const polyForArea = polygon || routePolygon;
+  const polyForArea = corridorOnly && routePolygon ? routePolygon : polygon || routePolygon;
   if (polyForArea) {
     const area = polygonAreaKm2(polyForArea);
     if (area > env.OVERPASS_MAX_AREA_KM2) {

@@ -107,7 +107,7 @@
         }
       });
     }
-    if (!map.getLayer('model-water')) {
+  if (!map.getLayer('model-water')) {
       map.addLayer({
         id: 'model-water',
         type: 'fill',
@@ -123,6 +123,20 @@
         source: 'model-geo',
         filter: ['==', ['get', 'featureType'], 'green'],
         paint: { 'fill-color': COLORS.green, 'fill-opacity': 0.5 }
+      });
+    }
+    if (!map.getLayer('model-roads')) {
+      map.addLayer({
+        id: 'model-roads',
+        type: 'fill-extrusion',
+        source: 'model-geo',
+        filter: ['==', ['get', 'featureType'], 'road'],
+        paint: {
+          'fill-extrusion-color': COLORS.road,
+          'fill-extrusion-height': ['get', 'height_final'],
+          'fill-extrusion-base': ['get', 'base_height'],
+          'fill-extrusion-opacity': 0.9
+        }
       });
     }
   }
@@ -189,7 +203,7 @@
       const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
       map!.on('mousemove', (e) => {
         const feats = map!.queryRenderedFeatures(e.point, {
-          layers: ['extrude-buildings', 'model-water', 'model-green']
+          layers: ['extrude-buildings', 'model-water', 'model-green', 'model-roads']
         });
         if (feats.length === 0) {
           popup.remove();

@@ -64,7 +64,8 @@ async function loadModel(invalidate = false) {
 
 export async function loadModelForRoute(
   route: GeoJSON.LineString,
-  routeBufferMeters?: number
+  routeBufferMeters?: number,
+  corridorOnly = false
 ) {
   modelLoading.set(true);
   modelError.set(null);
@@ -85,7 +86,8 @@ export async function loadModelForRoute(
         minArea: cfg.excludeSmallBuildings ? cfg.minBuildingArea : undefined,
         elements,
         route,
-        routeBufferMeters
+        routeBufferMeters,
+        corridorOnly
       })
     });
     const data = await res.json();

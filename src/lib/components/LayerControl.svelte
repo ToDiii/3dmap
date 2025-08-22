@@ -18,7 +18,8 @@
   const extraLayers: { id: string; label: string }[] = [
     { id: 'extrude-buildings', label: '3D-Gebäude (Map)' },
     { id: 'model-water', label: 'Gewässer (Geo)' },
-    { id: 'model-green', label: 'Grünflächen (Geo)' }
+    { id: 'model-green', label: 'Grünflächen (Geo)' },
+    { id: 'model-roads', label: 'Straßen (Geo)' }
   ];
 
   let visibility: Record<LayerKey, boolean> = {
@@ -33,16 +34,19 @@
   let extraVisibility: Record<string, boolean> = {
     'extrude-buildings': true,
     'model-water': true,
-    'model-green': true
+    'model-green': true,
+    'model-roads': true
   };
 
   layerStore.subscribe((v) => {
     extraVisibility['extrude-buildings'] = v.buildings3d;
     extraVisibility['model-water'] = v.water;
     extraVisibility['model-green'] = v.green;
+    extraVisibility['model-roads'] = v.roads;
     setLayerVisibility('extrude-buildings', v.buildings3d);
     setLayerVisibility('model-water', v.water);
     setLayerVisibility('model-green', v.green);
+    setLayerVisibility('model-roads', v.roads);
   });
 
   function applyVisibility(key: LayerKey) {
@@ -72,7 +76,8 @@
       ...s,
       buildings3d: extraVisibility['extrude-buildings'],
       water: extraVisibility['model-water'],
-      green: extraVisibility['model-green']
+      green: extraVisibility['model-green'],
+      roads: extraVisibility['model-roads']
     }));
   }
 

@@ -8,6 +8,7 @@ import { colorPalette } from '$lib/stores/colorPalette';
 import { uiConfigStore } from '$lib/stores/uiConfigStore';
 import { mapStore } from '$lib/stores/map';
 import { invalidateModel } from '$lib/stores/modelStore';
+import { applyCustomOverrides } from '$lib/model/widths';
 
 export function parseM2M(json: unknown): M2MProject {
   if (!json || typeof json !== 'object') throw new Error('Invalid project');
@@ -77,6 +78,11 @@ export async function applyM2M(project: M2MProject): Promise<void> {
       ],
       { padding: 20 }
     );
+  }
+
+  if (g.customRoadWidths || g.customWaterwayWidths) {
+    // values expected in meters; Map2Model may provide mm -> conversion if required
+    applyCustomOverrides(g.customRoadWidths, g.customWaterwayWidths);
   }
 
   if (g.gpxPathEnabled && g.gpxPathGeoJSON) {
