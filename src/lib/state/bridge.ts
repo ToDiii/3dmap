@@ -90,7 +90,7 @@ export async function applyState(scene: SceneState): Promise<void> {
   });
 
     if (scene.layers)
-      layerStore.set({ buildings3d: true, water: true, green: true, ...scene.layers });
+      layerStore.set({ buildings3d: true, water: true, green: true, roads: true, ...scene.layers });
 
   if (scene.shape) {
       if ('bbox' in scene.shape && scene.shape.bbox) {

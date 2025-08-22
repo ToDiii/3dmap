@@ -28,6 +28,10 @@ Das Projekt kann JSON-Dateien aus Map2Model laden und auf die internen Stores ab
 
 Nicht unterstützte Tabellen wie benutzerdefinierte Straßen- oder Wasserbreiten werden derzeit ignoriert.
 
+### Straßen- & Gewässerbreiten
+
+Standardbreiten werden serverseitig anhand des OSM-Tags bestimmt (z. B. `motorway` 25 m, `river` 20 m). Beim Import eines Map2Model-Projekts können über `customRoadWidths` bzw. `customWaterwayWidths` individuelle Werte (in Metern) gesetzt werden.
+
 ### 🚀 Schnellstart (lokale Entwicklung)
 
 #### Voraussetzungen

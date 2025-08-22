@@ -8,6 +8,11 @@ describe('buildOverpassQuery', () => {
     expect(q).toContain('way["highway"](1,2,3,4);');
   });
 
+  it('includes waterway for water elements', () => {
+    const q = buildOverpassQuery(['water'], [1, 2, 3, 4]);
+    expect(q).toContain('way["waterway"](1,2,3,4);');
+  });
+
   it('uses polygon instead of bbox', () => {
     const shape: GeoJSON.Polygon = {
       type: 'Polygon',
@@ -70,19 +75,20 @@ describe('convertTo3D', () => {
     expect(building?.height).toBe(13); // (2 levels *3)*2 + baseHeight(1)
     expect(building?.subtype).toBe('building_residential');
     const road = features.find((f) => f.type === 'road');
-    expect(road?.geometry[0][1]).toBe(1);
-    const water = features.find((f) => f.type === 'water');
-    expect(water).toBeTruthy();
+    expect(road).toBeTruthy();
+    const water = features.filter((f) => f.type === 'water');
+    expect(water.length).toBe(1); // only natural water, not waterway in sample
     const green = features.find((f) => f.type === 'green');
     expect(green).toBeTruthy();
 
     // GeoJSON output
-    expect(res.geojson.features).toHaveLength(3); // building, water, green
+    expect(res.geojson.features).toHaveLength(4); // building, road, water, green
     const bGeo = res.geojson.features.find((f) => f.properties?.featureType === 'building');
     expect(bGeo?.properties?.height_final).toBe(13);
     expect((bGeo?.properties as any)?.subtype).toBe('building_residential');
-    const wGeo = res.geojson.features.find((f) => f.properties?.featureType === 'water');
-    expect(wGeo?.properties?.height_final).toBe(1);
+    const rGeo = res.geojson.features.find((f) => f.properties?.featureType === 'road');
+    expect((rGeo?.properties as any)?.width_m).toBeDefined();
+    expect((rGeo?.properties as any)?.area_m2).toBeGreaterThan(0);
   });
 
   it('filters buildings by min area', () => {

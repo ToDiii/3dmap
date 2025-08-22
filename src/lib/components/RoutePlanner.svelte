@@ -13,7 +13,7 @@
   let error: string | null = null;
   let elevLoading = false;
   let elevError: string | null = null;
-  let loadCorridor = true;
+  let corridorOnly = true;
   const suggestions: Record<string, { lat: number; lon: number; label: string }[]> = {};
   const timers: Record<string, any> = {};
 
@@ -57,8 +57,8 @@
       elevLoading = true;
       try {
         await routeStore.enrichRouteWithElevation(res.geometry);
-        if (loadCorridor) {
-          await loadModelForRoute(res.geometry, ROUTE_BUFFER_METERS);
+        if (corridorOnly) {
+          await loadModelForRoute(res.geometry, ROUTE_BUFFER_METERS, true);
         }
         elevError = null;
       } catch (e) {
@@ -156,8 +156,8 @@
     <p class="text-sm">Dauer: {$routeStore.durationMin?.toFixed(1)} min</p>
   {/if}
   <div class="flex items-center space-x-2">
-    <input type="checkbox" bind:checked={loadCorridor} id="corridor" />
-    <label for="corridor" class="text-sm">Korridor-Modell laden</label>
+    <input type="checkbox" bind:checked={corridorOnly} id="corridor" />
+    <label for="corridor" class="text-sm">Nur Routenkorridor laden (Straßen/Flüsse)</label>
   </div>
   {#if elevLoading}
     <p class="text-sm">H\u00f6henprofil wird geladen...</p>

@@ -108,7 +108,7 @@ Integriere die Basishöhe und den Gebäudehöhe-Multiplikator in die serverseiti
 
 Phase 4: 3D-Synthese, Visualisierung & Export
 
-[ ] Verfeinerung der serverseitigen 3D-Generierung.
+[x] Verfeinerung der serverseitigen 3D-Generierung.
 
 Implementiere die Logik zur Verarbeitung der ausgewählten Elemente. Beispielsweise können Straßen und Gewässer als flache, extrudierte Flächen zum 3D-Modell hinzugefügt werden, um Kontext zu schaffen.
 
@@ -146,6 +146,7 @@ Die bestehende GLTFExporter-Logik kann beibehalten werden. Sie exportiert die ge
 [x] Fix: SSR-sicherer Wrapper für mergeBufferGeometries
 [x] Feature: Routing aus Adressen
 [x] Feature: MapLibre 3D-Extrusion mit serverseitiger Höhenberechnung
+[x] Feature: Realistische Straßen- & Gewässerbreiten mit Map2Model-Overrides
 [x] Overpass-Robustheit & Tile-Splitting
 [x] Feature: Höhenprofil & Routenkorridor
 [x] Feature: Thematische Schemata, Legende und Hover-Infos

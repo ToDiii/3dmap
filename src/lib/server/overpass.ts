@@ -2,6 +2,9 @@ import type * as GeoJSON from 'geojson';
 import { mapBuildingSubtype } from '$lib/constants/palette';
 import intersect from '@turf/intersect';
 import area from '@turf/area';
+import buffer from '@turf/buffer';
+import { lineString } from '@turf/helpers';
+import { getRoadWidthMeters, getWaterwayWidthMeters } from '$lib/model/widths';
 
 export function buildOverpassQuery(
   elements: string[],
@@ -24,7 +27,7 @@ export function buildOverpassQuery(
     query += `way["highway"]${areaPart};`;
   }
   if (elements.includes('water')) {
-    query += `way["natural"="water"]${areaPart};relation["natural"="water"]${areaPart};`;
+    query += `way["natural"="water"]${areaPart};relation["natural"="water"]${areaPart};way["waterway"]${areaPart};`;
   }
   if (elements.includes('green')) {
     query += `way["leisure"="park"]${areaPart};relation["leisure"="park"]${areaPart};way["landuse"="grass"]${areaPart};relation["landuse"="grass"]${areaPart};`;
@@ -47,23 +50,14 @@ export function convertTo3D(
   for (const element of data.elements || []) {
     if (!element.geometry) continue;
     const tags = element.tags || {};
-    const featureType = tags.building
-      ? 'building'
-      : tags.natural === 'water'
-      ? 'water'
-      : tags.leisure === 'park' || tags.landuse === 'grass'
-      ? 'green'
-      : tags.highway
-      ? 'road'
-      : 'other';
     const name = tags.name;
-    if (featureType === 'building') {
+    if (tags.building) {
       let poly = element.geometry.map((p: any) => [p.lon, p.lat]);
       if (poly.length > 0 && (poly[0][0] !== poly[poly.length - 1][0] || poly[0][1] !== poly[poly.length - 1][1])) {
         poly.push(poly[0]);
       }
       let polys = [poly];
-      if (clipPolygon) {
+    if (clipPolygon) {
         let clipped: any;
         try {
           clipped = intersect(
@@ -100,7 +94,7 @@ export function convertTo3D(
           height_raw: heightRaw,
           base_height: baseHeight,
           height_final: height,
-          featureType,
+          featureType: 'building',
           name,
           area_m2: a
         };
@@ -115,24 +109,102 @@ export function convertTo3D(
       }
       continue;
     }
-    const coords = element.geometry.map((p: any) => [p.lon * scale, baseHeight, p.lat * scale]);
-    features.push({ id: element.id, type: featureType, geometry: coords, height: baseHeight });
-    if (featureType === 'water' || featureType === 'green') {
+    if (tags.highway) {
+      const width = getRoadWidthMeters(tags);
+      const line = lineString(element.geometry.map((p: any) => [p.lon, p.lat]));
+      const buf = buffer(line, width / 2, { units: 'meters', steps: 16 }).geometry;
+      const polys = buf.type === 'Polygon' ? [buf.coordinates[0]] : buf.coordinates.map((c) => c[0]);
+      for (const poly of polys) {
+        const a = area({ type: 'Polygon', coordinates: [poly] } as any);
+        if (minArea > 0 && a < minArea) continue;
+        const coords = poly.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]);
+        const height = baseHeight + 0.2;
+        features.push({ id: element.id, type: 'road', geometry: coords, height });
+        geoFeatures.push({
+          type: 'Feature',
+          geometry: { type: 'Polygon', coordinates: [poly] },
+          properties: {
+            featureType: 'road',
+            kind: 'road',
+            width_m: width,
+            area_m2: a,
+            base_height: baseHeight,
+            height_final: height,
+            name
+          }
+        });
+      }
+      continue;
+    }
+    if (tags.waterway) {
+      const width = getWaterwayWidthMeters(tags);
+      const line = lineString(element.geometry.map((p: any) => [p.lon, p.lat]));
+      const buf = buffer(line, width / 2, { units: 'meters', steps: 16 }).geometry;
+      const polys = buf.type === 'Polygon' ? [buf.coordinates[0]] : buf.coordinates.map((c) => c[0]);
+      for (const poly of polys) {
+        const a = area({ type: 'Polygon', coordinates: [poly] } as any);
+        if (minArea > 0 && a < minArea) continue;
+        const coords = poly.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]);
+        const height = baseHeight + 0.1;
+        features.push({ id: element.id, type: 'water', geometry: coords, height });
+        geoFeatures.push({
+          type: 'Feature',
+          geometry: { type: 'Polygon', coordinates: [poly] },
+          properties: {
+            featureType: 'water',
+            kind: 'water',
+            width_m: width,
+            area_m2: a,
+            base_height: baseHeight,
+            height_final: height,
+            name
+          }
+        });
+      }
+      continue;
+    }
+    if (tags.natural === 'water') {
       const poly = element.geometry.map((p: any) => [p.lon, p.lat]);
       if (poly.length > 0 && (poly[0][0] !== poly[poly.length - 1][0] || poly[0][1] !== poly[poly.length - 1][1])) {
         poly.push(poly[0]);
       }
+      const a = area({ type: 'Polygon', coordinates: [poly] } as any);
+      if (minArea > 0 && a < minArea) continue;
+      features.push({ id: element.id, type: 'water', geometry: poly.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]), height: baseHeight + 0.1 });
       geoFeatures.push({
         type: 'Feature',
         geometry: { type: 'Polygon', coordinates: [poly] },
         properties: {
-          height_raw: 0,
+          featureType: 'water',
+          kind: 'water',
+          area_m2: a,
           base_height: baseHeight,
-          height_final: baseHeight,
-          featureType,
+          height_final: baseHeight + 0.1,
           name
         }
       });
+      continue;
+    }
+    if (tags.leisure === 'park' || tags.landuse === 'grass') {
+      const poly = element.geometry.map((p: any) => [p.lon, p.lat]);
+      if (poly.length > 0 && (poly[0][0] !== poly[poly.length - 1][0] || poly[0][1] !== poly[poly.length - 1][1])) {
+        poly.push(poly[0]);
+      }
+      const a = area({ type: 'Polygon', coordinates: [poly] } as any);
+      if (minArea > 0 && a < minArea) continue;
+      features.push({ id: element.id, type: 'green', geometry: poly.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]), height: baseHeight + 0.1 });
+      geoFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: [poly] },
+        properties: {
+          featureType: 'green',
+          area_m2: a,
+          base_height: baseHeight,
+          height_final: baseHeight + 0.1,
+          name
+        }
+      });
+      continue;
     }
   }
   const geojson: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: geoFeatures };
