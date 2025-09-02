@@ -10,21 +10,21 @@ import { extrudeGroupStore } from '$lib/stores/extrudeGroupStore';
  * Includes values from modelConfigStore, pathStore and bboxStore.
  */
 export function exportProject() {
-  const project = {
-    modelConfigStore: get(modelConfigStore),
-    pathStore: get(pathStore),
-    bboxStore: get(bboxStore)
-  };
-  const blob = new Blob([JSON.stringify(project, null, 2)], {
-    type: 'application/json'
-  });
-  const url = URL.createObjectURL(blob);
-  const timestamp = Date.now();
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `project_${timestamp}.3dmap.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+	const project = {
+		modelConfigStore: get(modelConfigStore),
+		pathStore: get(pathStore),
+		bboxStore: get(bboxStore),
+	};
+	const blob = new Blob([JSON.stringify(project, null, 2)], {
+		type: 'application/json',
+	});
+	const url = URL.createObjectURL(blob);
+	const timestamp = Date.now();
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = `project_${timestamp}.3dmap.json`;
+	a.click();
+	URL.revokeObjectURL(url);
 }
 
 /**
@@ -32,46 +32,45 @@ export function exportProject() {
  * populate the respective stores with its data.
  */
 export async function importProject(file: File) {
-  const text = await file.text();
-  const data = JSON.parse(text);
-  if (data.modelConfigStore) {
-    modelConfigStore.set(data.modelConfigStore);
-  }
-  if (data.pathStore) {
-    pathStore.set(data.pathStore);
-  } else {
-    pathStore.set(null);
-  }
-  if (data.bboxStore) {
-    bboxStore.set(data.bboxStore);
-  } else {
-    bboxStore.set(null);
-  }
+	const text = await file.text();
+	const data = JSON.parse(text);
+	if (data.modelConfigStore) {
+		modelConfigStore.set(data.modelConfigStore);
+	}
+	if (data.pathStore) {
+		pathStore.set(data.pathStore);
+	} else {
+		pathStore.set(null);
+	}
+	if (data.bboxStore) {
+		bboxStore.set(data.bboxStore);
+	} else {
+		bboxStore.set(null);
+	}
 }
 
 /**
  * Reset all project related stores and map state.
  */
 export function resetProject() {
-  pathStore.set(null);
-  bboxStore.set(null);
-  modelConfigStore.reset();
-  extrudeGroupStore.set(null);
+	pathStore.set(null);
+	bboxStore.set(null);
+	modelConfigStore.reset();
+	extrudeGroupStore.set(null);
 
-  const map = get(mapStore);
-  // remove any layers or sources added to the map
-  if (map) {
-    // attempt to remove all custom sources/layers except defaults
-    const layers = map.getStyle()?.layers?.map((l) => l.id) || [];
-    for (const id of layers) {
-      if (id !== 'extruded-buildings') continue;
-      if (map.getLayer(id)) map.removeLayer(id);
-    }
-    const sources = Object.keys(map.getStyle()?.sources || {});
-    for (const id of sources) {
-      if (id === 'extruded-buildings') continue;
-      if (map.getSource(id)) map.removeSource(id);
-    }
-  }
+	const map = get(mapStore);
+	// remove any layers or sources added to the map
+	if (map) {
+		// attempt to remove all custom sources/layers except defaults
+		const layers = map.getStyle()?.layers?.map((l) => l.id) || [];
+		for (const id of layers) {
+			if (id !== 'extruded-buildings') continue;
+			if (map.getLayer(id)) map.removeLayer(id);
+		}
+		const sources = Object.keys(map.getStyle()?.sources || {});
+		for (const id of sources) {
+			if (id === 'extruded-buildings') continue;
+			if (map.getSource(id)) map.removeSource(id);
+		}
+	}
 }
-

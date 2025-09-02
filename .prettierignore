@@ -1,0 +1,11 @@
+# Ignore artifacts
+.svelte-kit
+build
+.output
+.vercel
+.netlify
+.wrangler
+static/icons-gen/
+
+# Ignore dependencies
+node_modules

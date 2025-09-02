@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
   pull_request:
-    branches: ["main"]
+    branches: ['main']
 
 jobs:
   test:
@@ -17,6 +17,10 @@ jobs:
           node-version: 20.19.0
           cache: npm
       - run: npm ci
+      - name: Linting check
+        run: npm run lint
+      - name: Security Audit
+        run: npm audit --audit-level=high
       - name: Unit tests
         run: npm run test
       # E2E nur bei Bedarf aktivieren:

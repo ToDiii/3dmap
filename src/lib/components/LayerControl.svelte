@@ -1,134 +1,142 @@
 <script lang="ts">
-  import { mapStore } from '$lib/stores/map';
-  import { LAYERS } from '$lib/constants/layers';
-  import { get } from 'svelte/store';
-  import { onMount } from 'svelte';
-  import { onMapLoaded } from '$lib/utils/map';
-  import { layerStore } from '$lib/stores/layerStore';
+	import { mapStore } from '$lib/stores/map';
+	import { LAYERS } from '$lib/constants/layers';
+	import { get } from 'svelte/store';
+	import { onMount } from 'svelte';
+	import { onMapLoaded } from '$lib/utils/map';
+	import { layerStore } from '$lib/stores/layerStore';
 
-  type LayerKey = keyof typeof LAYERS;
+	type LayerKey = keyof typeof LAYERS;
 
-  const layerOptions: { key: LayerKey; label: string }[] = [
-    { key: 'building', label: 'Gebäude' },
-    { key: 'water', label: 'Gewässer' },
-    { key: 'green', label: 'Grünflächen' },
-    { key: 'road', label: 'Straßen' }
-  ];
+	const layerOptions: { key: LayerKey; label: string }[] = [
+		{ key: 'building', label: 'Gebäude' },
+		{ key: 'water', label: 'Gewässer' },
+		{ key: 'green', label: 'Grünflächen' },
+		{ key: 'road', label: 'Straßen' },
+	];
 
-  const extraLayers: { id: string; label: string }[] = [
-    { id: 'extrude-buildings', label: '3D-Gebäude (Map)' },
-    { id: 'model-water', label: 'Gewässer (Geo)' },
-    { id: 'model-green', label: 'Grünflächen (Geo)' },
-    { id: 'model-roads', label: 'Straßen (Geo)' }
-  ];
+	const extraLayers: { id: string; label: string }[] = [
+		{ id: 'extrude-buildings', label: '3D-Gebäude (Map)' },
+		{ id: 'model-water', label: 'Gewässer (Geo)' },
+		{ id: 'model-green', label: 'Grünflächen (Geo)' },
+		{ id: 'model-roads', label: 'Straßen (Geo)' },
+	];
 
-  let visibility: Record<LayerKey, boolean> = {
-    building: true,
-    water: true,
-    green: true,
-    road: true
-  };
+	let visibility: Record<LayerKey, boolean> = {
+		building: true,
+		water: true,
+		green: true,
+		road: true,
+	};
 
-  let reduceDetails = false;
+	let reduceDetails = false;
 
-  let extraVisibility: Record<string, boolean> = {
-    'extrude-buildings': true,
-    'model-water': true,
-    'model-green': true,
-    'model-roads': true
-  };
+	let extraVisibility: Record<string, boolean> = {
+		'extrude-buildings': true,
+		'model-water': true,
+		'model-green': true,
+		'model-roads': true,
+	};
 
-  layerStore.subscribe((v) => {
-    extraVisibility['extrude-buildings'] = v.buildings3d;
-    extraVisibility['model-water'] = v.water;
-    extraVisibility['model-green'] = v.green;
-    extraVisibility['model-roads'] = v.roads;
-    setLayerVisibility('extrude-buildings', v.buildings3d);
-    setLayerVisibility('model-water', v.water);
-    setLayerVisibility('model-green', v.green);
-    setLayerVisibility('model-roads', v.roads);
-  });
+	layerStore.subscribe((v) => {
+		extraVisibility['extrude-buildings'] = v.buildings3d;
+		extraVisibility['model-water'] = v.water;
+		extraVisibility['model-green'] = v.green;
+		extraVisibility['model-roads'] = v.roads;
+		setLayerVisibility('extrude-buildings', v.buildings3d);
+		setLayerVisibility('model-water', v.water);
+		setLayerVisibility('model-green', v.green);
+		setLayerVisibility('model-roads', v.roads);
+	});
 
-  function applyVisibility(key: LayerKey) {
-    const map = get(mapStore);
-    if (!map) return;
-    onMapLoaded(map, () => {
-      const def = LAYERS[key];
-      def.ids.forEach((id) =>
-        map.setLayoutProperty(id, 'visibility', visibility[key] ? 'visible' : 'none')
-      );
-    });
-  }
+	function applyVisibility(key: LayerKey) {
+		const map = get(mapStore);
+		if (!map) return;
+		onMapLoaded(map, () => {
+			const def = LAYERS[key];
+			def.ids.forEach((id) =>
+				map.setLayoutProperty(id, 'visibility', visibility[key] ? 'visible' : 'none')
+			);
+		});
+	}
 
-  function setLayerVisibility(id: string, visible: boolean) {
-    const map = get(mapStore);
-    if (!map) return;
-    onMapLoaded(map, () => {
-      if (map.getLayer(id)) {
-        map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
-      }
-    });
-  }
+	function setLayerVisibility(id: string, visible: boolean) {
+		const map = get(mapStore);
+		if (!map) return;
+		onMapLoaded(map, () => {
+			if (map.getLayer(id)) {
+				map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
+			}
+		});
+	}
 
-  function applyExtraVisibility(id: string) {
-    setLayerVisibility(id, extraVisibility[id]);
-    layerStore.update((s) => ({
-      ...s,
-      buildings3d: extraVisibility['extrude-buildings'],
-      water: extraVisibility['model-water'],
-      green: extraVisibility['model-green'],
-      roads: extraVisibility['model-roads']
-    }));
-  }
+	function applyExtraVisibility(id: string) {
+		setLayerVisibility(id, extraVisibility[id]);
+		layerStore.update((s) => ({
+			...s,
+			buildings3d: extraVisibility['extrude-buildings'],
+			water: extraVisibility['model-water'],
+			green: extraVisibility['model-green'],
+			roads: extraVisibility['model-roads'],
+		}));
+	}
 
-  function applyDetailFilter() {
-    const map = get(mapStore);
-    if (!map) return;
-    onMapLoaded(map, () => {
-      Object.entries(LAYERS).forEach(([key, def]) => {
-        if (def.detailFilter) {
-          def.ids.forEach((id) => {
-            map.setFilter(id, reduceDetails ? def.detailFilter! : null);
-          });
-        }
-      });
-    });
-  }
+	function applyDetailFilter() {
+		const map = get(mapStore);
+		if (!map) return;
+		onMapLoaded(map, () => {
+			Object.entries(LAYERS).forEach(([, def]) => {
+				if (def.detailFilter) {
+					def.ids.forEach((id) => {
+						map.setFilter(id, reduceDetails ? def.detailFilter! : null);
+					});
+				}
+			});
+		});
+	}
 
-  onMount(() => {
-    const map = get(mapStore);
-    if (map) {
-      (Object.keys(visibility) as LayerKey[]).forEach((k) => applyVisibility(k));
-      extraLayers.forEach(({ id }) => applyExtraVisibility(id));
-    }
-  });
+	onMount(() => {
+		const map = get(mapStore);
+		if (map) {
+			(Object.keys(visibility) as LayerKey[]).forEach((k) => applyVisibility(k));
+			extraLayers.forEach(({ id }) => applyExtraVisibility(id));
+		}
+	});
 
-  mapStore.subscribe((map) => {
-    if (map) {
-      (Object.keys(visibility) as LayerKey[]).forEach((k) => applyVisibility(k));
-      extraLayers.forEach(({ id }) => applyExtraVisibility(id));
-      applyDetailFilter();
-    }
-  });
+	mapStore.subscribe((map) => {
+		if (map) {
+			(Object.keys(visibility) as LayerKey[]).forEach((k) => applyVisibility(k));
+			extraLayers.forEach(({ id }) => applyExtraVisibility(id));
+			applyDetailFilter();
+		}
+	});
 </script>
 
 <div class="space-y-4">
-  {#each layerOptions as { key, label }}
-    <label class="flex items-center gap-2">
-      <input type="checkbox" bind:checked={visibility[key]} on:change={() => applyVisibility(key)} />
-      <span>{label}</span>
-    </label>
-  {/each}
-  {#each extraLayers as { id, label }}
-    <label class="flex items-center gap-2">
-      <input type="checkbox" bind:checked={extraVisibility[id]} on:change={() => applyExtraVisibility(id)} />
-      <span>{label}</span>
-    </label>
-  {/each}
-  <div class="pt-4 border-t">
-    <label class="flex items-center gap-2">
-      <input type="checkbox" bind:checked={reduceDetails} on:change={applyDetailFilter} />
-      <span>Details reduzieren</span>
-    </label>
-  </div>
+	{#each layerOptions as { key, label } (key)}
+		<label class="flex items-center gap-2">
+			<input
+				type="checkbox"
+				bind:checked={visibility[key]}
+				on:change={() => applyVisibility(key)}
+			/>
+			<span>{label}</span>
+		</label>
+	{/each}
+	{#each extraLayers as { id, label } (id)}
+		<label class="flex items-center gap-2">
+			<input
+				type="checkbox"
+				bind:checked={extraVisibility[id]}
+				on:change={() => applyExtraVisibility(id)}
+			/>
+			<span>{label}</span>
+		</label>
+	{/each}
+	<div class="border-t pt-4">
+		<label class="flex items-center gap-2">
+			<input type="checkbox" bind:checked={reduceDetails} on:change={applyDetailFilter} />
+			<span>Details reduzieren</span>
+		</label>
+	</div>
 </div>

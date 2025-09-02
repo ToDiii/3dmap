@@ -1,0 +1,1 @@
+[["openrouteservice:1.000000,2.000000;3.000000,4.000000",{"value":{"geometry":{"type":"LineString","coordinates":[[1,2],[3,4]]},"distanceKm":1,"durationMin":10},"expires":1756805575611}]]

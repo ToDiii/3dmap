@@ -5,6 +5,7 @@
 Generates simplified 3D geometry from OpenStreetMap data.
 
 ### Request Body
+
 ```
 {
   "scale": number,
@@ -17,6 +18,7 @@ Generates simplified 3D geometry from OpenStreetMap data.
 ```
 
 ### Response
+
 ```
 {
   "features": [

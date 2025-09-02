@@ -1,95 +1,99 @@
 <script lang="ts">
-import '../app.css';
-import { onMount, onDestroy } from 'svelte';
-import CommandPalette from '$lib/components/CommandPalette.svelte';
-import ShortcutHelp from '$lib/components/ShortcutHelp.svelte';
-import { setupShortcuts } from '$lib/controls/shortcutListener';
-import { updateAvailable, initPWA, skipWaiting } from '$lib/pwa';
-import { readFromUrl } from '$lib/state/url';
-import { deserialize } from '$lib/state/serialize';
-import { applyState, debouncedWrite } from '$lib/state/bridge';
-import { modelConfigStore } from '$lib/stores/modelConfigStore';
-import { bboxStore } from '$lib/stores/bboxStore';
-import { shapeStore } from '$lib/stores/shapeStore';
-import { routeStore } from '$lib/stores/routeStore';
-import { layerStore } from '$lib/stores/layerStore';
-import { viewModeStore } from '$lib/stores/viewModeStore';
-import { mapStore } from '$lib/stores/map';
-import { browser } from '$app/environment';
-import { settingsStore } from '$lib/stores/settingsStore';
-import { initWebVitals } from '$lib/telemetry/vitals';
-let { children } = $props();
-let removeShortcuts: (() => void) | undefined;
-onMount(async () => {
-  removeShortcuts = setupShortcuts();
-  initPWA();
-  if (!browser) return;
-  const raw = readFromUrl();
-  if (raw) {
-    const st = deserialize(raw);
-    if (st) {
-      try {
-        await applyState(st);
-      } catch (e) {
-        console.error('apply state failed', e);
-      }
-    } else {
-      console.warn('Ungültiger Link-State');
-    }
-  }
-  modelConfigStore.subscribe(() => debouncedWrite());
-  bboxStore.subscribe(() => debouncedWrite());
-  shapeStore.subscribe(() => debouncedWrite());
-  routeStore.subscribe(() => debouncedWrite());
-  layerStore.subscribe(() => debouncedWrite());
-  viewModeStore.subscribe(() => debouncedWrite());
-  mapStore.subscribe((m) => {
-    if (m) m.on('moveend', debouncedWrite);
-  });
-  let vitalsStarted = false;
-  settingsStore.subscribe((s) => {
-    if (s.telemetryConsent && !vitalsStarted) {
-      vitalsStarted = true;
-      initWebVitals();
-    }
-  });
-});
-onDestroy(() => {
-  removeShortcuts && removeShortcuts();
-});
-function reload() {
-  skipWaiting();
-}
+	import '../app.css';
+	import { onMount, onDestroy } from 'svelte';
+	import CommandPalette from '$lib/components/CommandPalette.svelte';
+	import ShortcutHelp from '$lib/components/ShortcutHelp.svelte';
+	import { setupShortcuts } from '$lib/controls/shortcutListener';
+	import { updateAvailable, initPWA, skipWaiting } from '$lib/pwa';
+	import { readFromUrl } from '$lib/state/url';
+	import { deserialize } from '$lib/state/serialize';
+	import { applyState, debouncedWrite } from '$lib/state/bridge';
+	import { modelConfigStore } from '$lib/stores/modelConfigStore';
+	import { bboxStore } from '$lib/stores/bboxStore';
+	import { shapeStore } from '$lib/stores/shapeStore';
+	import { routeStore } from '$lib/stores/routeStore';
+	import { layerStore } from '$lib/stores/layerStore';
+	import { viewModeStore } from '$lib/stores/viewModeStore';
+	import { mapStore } from '$lib/stores/map';
+	import { browser } from '$app/environment';
+	import { settingsStore } from '$lib/stores/settingsStore';
+	import { initWebVitals } from '$lib/telemetry/vitals';
+	let { children } = $props();
+	let removeShortcuts: (() => void) | undefined;
+	onMount(async () => {
+		removeShortcuts = setupShortcuts();
+		initPWA();
+		if (!browser) return;
+		const raw = readFromUrl();
+		if (raw) {
+			const st = deserialize(raw);
+			if (st) {
+				try {
+					await applyState(st);
+				} catch (e) {
+					console.error('apply state failed', e);
+				}
+			} else {
+				console.warn('Ungültiger Link-State');
+			}
+		}
+		modelConfigStore.subscribe(() => debouncedWrite());
+		bboxStore.subscribe(() => debouncedWrite());
+		shapeStore.subscribe(() => debouncedWrite());
+		routeStore.subscribe(() => debouncedWrite());
+		layerStore.subscribe(() => debouncedWrite());
+		viewModeStore.subscribe(() => debouncedWrite());
+		mapStore.subscribe((m) => {
+			if (m) m.on('moveend', debouncedWrite);
+		});
+		let vitalsStarted = false;
+		settingsStore.subscribe((s) => {
+			if (s.telemetryConsent && !vitalsStarted) {
+				vitalsStarted = true;
+				initWebVitals();
+			}
+		});
+	});
+	onDestroy(() => {
+		if (removeShortcuts) {
+			removeShortcuts();
+		}
+	});
+	function reload() {
+		skipWaiting();
+	}
 </script>
+
 <svelte:head>
-<link rel="icon" type="image/png" href="/icons-gen/icon-32.png" />
-<link rel="manifest" href="/manifest.webmanifest" />
-<link rel="apple-touch-icon" sizes="180x180" href="/icons-gen/apple-touch-icon-180.png" />
-<meta name="theme-color" content="#111111" />
+	<link rel="icon" type="image/png" href="/icons-gen/icon-32.png" />
+	<link rel="manifest" href="/manifest.webmanifest" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/icons-gen/apple-touch-icon-180.png" />
+	<meta name="theme-color" content="#111111" />
 </svelte:head>
 {@render children?.()}
 <CommandPalette />
 <ShortcutHelp />
 {#if $updateAvailable}
-  <div class="pwa-toast">Update verfügbar — <button on:click={reload}>Neu laden</button></div>
+	<div class="pwa-toast">Update verfügbar — <button on:click={reload}>Neu laden</button></div>
 {/if}
+
 <style>
-  .pwa-toast {
-    position: fixed;
-    bottom: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: #fff;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-  }
-  .pwa-toast button {
-    margin-left: 0.5rem;
-    background: #555;
-    color: #fff;
-    padding: 0.2rem 0.5rem;
-    border: none;
-    border-radius: 3px;
-  }
+	.pwa-toast {
+		position: fixed;
+		bottom: 1rem;
+		left: 50%;
+		transform: translateX(-50%);
+		background: #333;
+		color: #fff;
+		padding: 0.5rem 1rem;
+		border-radius: 4px;
+	}
+	.pwa-toast button {
+		margin-left: 0.5rem;
+		background: #555;
+		color: #fff;
+		padding: 0.2rem 0.5rem;
+		border: none;
+		border-radius: 3px;
+	}
 </style>

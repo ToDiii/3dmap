@@ -5,32 +5,32 @@ import LZString from 'lz-string';
 const { compressToEncodedURIComponent } = LZString;
 
 describe('state serialization', () => {
-  const baseState: SceneState = {
-    v: 1,
-    model: { scale: 500, baseHeight: 0, buildingMultiplier: 1, elementTypes: ['buildings'] },
-    meta: { ts: 1 }
-  };
+	const baseState: SceneState = {
+		v: 1,
+		model: { scale: 500, baseHeight: 0, buildingMultiplier: 1, elementTypes: ['buildings'] },
+		meta: { ts: 1 },
+	};
 
-  it('roundtrip', () => {
-    const s = serialize(baseState);
-    const back = deserialize(s);
-    expect(back).toEqual(baseState);
-  });
+	it('roundtrip', () => {
+		const s = serialize(baseState);
+		const back = deserialize(s);
+		expect(back).toEqual(baseState);
+	});
 
-  it('invalid version returns null', () => {
-    const bad = compressToEncodedURIComponent(JSON.stringify({ ...baseState, v: 999 }));
-    expect(deserialize(bad)).toBeNull();
-  });
+	it('invalid version returns null', () => {
+		const bad = compressToEncodedURIComponent(JSON.stringify({ ...baseState, v: 999 }));
+		expect(deserialize(bad)).toBeNull();
+	});
 
-  it('warn when over size limit', () => {
-    const big: SceneState = {
-      ...baseState,
-      route: {
-        waypoints: Array.from({ length: 100000 }, () => ({ a: 'x', c: [0, 0] })),
-        line: { type: 'LineString', coordinates: Array.from({ length: 100000 }, () => [0, 0]) }
-      }
-    };
-    const s = serialize(big);
-    expect(s.length).toBeGreaterThan(MAX_STATE_SIZE);
-  });
+	it('warn when over size limit', () => {
+		const big: SceneState = {
+			...baseState,
+			route: {
+				waypoints: Array.from({ length: 100000 }, () => ({ a: 'x', c: [0, 0] })),
+				line: { type: 'LineString', coordinates: Array.from({ length: 100000 }, () => [0, 0]) },
+			},
+		};
+		const s = serialize(big);
+		expect(s.length).toBeGreaterThan(MAX_STATE_SIZE);
+	});
 });
