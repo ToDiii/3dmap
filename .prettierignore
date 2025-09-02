@@ -9,3 +9,8 @@ static/icons-gen/
 
 # Ignore dependencies
 node_modules
+
+# Ignore cache files
+geocode-cache.json
+route-cache.json
+model-cache.json
