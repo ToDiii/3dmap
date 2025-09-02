@@ -10,6 +10,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 ## [Unreleased]
 
 ### Added
+
 - Tastatur-Shortcuts, globale Shortcut-Registry und Command Palette
 - ShapeSelector zum Zeichnen von Rechtecken und Kreisen auf der Karte
 - API-Unterstützung für Shapes beim Modellabruf
@@ -45,6 +46,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Realistische Straßen- und Gewässerbreiten (Map & 3D) inkl. Map2Model-Overrides
 
 ### Fixed
+
 - ESM/SSR-Importprobleme bei `three` durch Inline-Konfiguration in Vite/Vitest
 - GHCR release workflow uses lowercase image tags to satisfy registry requirements
 - Replaced PNG PWA icons with SVG placeholders to avoid binary files
@@ -57,6 +59,7 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 ## [v1.0.0] – 2025-08-04
 
 ### 🚀 Added
+
 - Interaktive 2D-Karte mit MapLibre GL JS
 - GPX-Upload mit automatischem Zoom & Pfadanzeige
 - Zeichenwerkzeug für manuelle Pfaderstellung (maplibre-gl-draw)
@@ -72,10 +75,12 @@ und dieses Projekt verwendet [SemVer](https://semver.org/lang/de/) für die Vers
 - Fehleranzeigen im UI bei leeren oder fehlerhaften Daten
 
 ### 🛠️ Changed
+
 - Stabilisierung der Serverlogik mit persistenter Caching-Schicht (`model-cache.json`)
 - API akzeptiert jetzt Bounding-Box, Pfad oder Parameterkombinationen
 
 ### 🐛 Fixed
+
 - Konsistente Modellhöhen bei Kombination von Basishöhe und Multiplikator
 - Fallbacks für ungültige oder leere GPX-Dateien
 

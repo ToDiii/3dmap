@@ -3,9 +3,9 @@ import { writable } from 'svelte/store';
 export const shortcutHelpStore = writable(false);
 
 export function openHelp() {
-  shortcutHelpStore.set(true);
+	shortcutHelpStore.set(true);
 }
 
 export function closeHelp() {
-  shortcutHelpStore.set(false);
+	shortcutHelpStore.set(false);
 }

@@ -38,4 +38,3 @@
 3. **Routing feature** – Implement address→route→path flow with pluggable geocoding/routing services and GPX export.
 4. **Robust Overpass & extrusion** – Add timeout/retry/backoff and expose parameters UI; bring extrusion to map view with base height/multiplier controls.
 5. **Export hardening** – Filter by visibility, clean scene before STL/3MF/GLTF/GLB export and timestamped filenames with smoke tests.
-

@@ -1,0 +1,16 @@
+# Ignore artifacts
+.svelte-kit
+build
+.output
+.vercel
+.netlify
+.wrangler
+static/icons-gen/
+
+# Ignore dependencies
+node_modules
+
+# Ignore cache files
+geocode-cache.json
+route-cache.json
+model-cache.json

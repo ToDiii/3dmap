@@ -19,7 +19,7 @@ Datenquelle: Overpass API (OpenStreetMap)
 
 TODO.md
 ✔️ Buildfehler durch ungültigen API-Export behoben.
- 
+
 Phase 1: Fundament, Karten-Interface & Layer-Management
 
 [x] Projekt-Setup & Basiskonfiguration.
