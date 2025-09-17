@@ -2,15 +2,15 @@ import * as THREE from 'three';
 
 export type SimplePolygon = [number, number, number][];
 export interface Feature {
-	id?: number | string;
-	geometry: SimplePolygon | SimplePolygon[];
-	height: number;
-	type: 'building' | 'road' | 'water' | 'green' | 'other';
-	subtype?:
-		| 'building_residential'
-		| 'building_commercial'
-		| 'building_industrial'
-		| 'building_generic';
+        id?: number | string;
+        geometry: SimplePolygon | SimplePolygon[];
+        height: number;
+        type: 'building' | 'road' | 'water' | 'green' | 'sand' | 'pier' | 'other';
+        subtype?:
+                | 'building_residential'
+                | 'building_commercial'
+                | 'building_industrial'
+                | 'building_generic';
 }
 
 export interface MeshFeature {

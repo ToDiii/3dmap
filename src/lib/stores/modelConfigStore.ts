@@ -8,19 +8,28 @@ export interface ModelElements {
 }
 
 export interface ModelConfig {
-	scale: number;
-	baseHeight: number;
-	buildingMultiplier: number;
-	elements: ModelElements;
-	excludeSmallBuildings: boolean;
-	minBuildingArea: number;
-	minBuildingHeightMM: number;
-	cropMapToBounds: boolean;
+        scale: number;
+        baseHeight: number;
+        buildingMultiplier: number;
+        elements: ModelElements;
+        excludeSmallBuildings: boolean;
+        minBuildingArea: number;
+        minBuildingHeightMM: number;
+        cropMapToBounds: boolean;
+        waterHeightMM: number;
+        greeneryHeightMM: number;
+        beachHeightMM: number;
+        pierHeightMM: number;
+        minWaterAreaM2: number;
+        footpathRoadsEnabled: boolean;
+        oceanEnabled: boolean;
+        beachEnabled: boolean;
+        piersEnabled: boolean;
 }
 
 const defaultConfig: ModelConfig = {
-	scale: 500,
-	baseHeight: 0,
+        scale: 500,
+        baseHeight: 0,
 	buildingMultiplier: 1,
 	elements: {
 		buildings: true,
@@ -28,10 +37,19 @@ const defaultConfig: ModelConfig = {
 		water: true,
 		green: true,
 	},
-	excludeSmallBuildings: false,
-	minBuildingArea: 50,
-	minBuildingHeightMM: 0,
-	cropMapToBounds: false,
+        excludeSmallBuildings: false,
+        minBuildingArea: 50,
+        minBuildingHeightMM: 0,
+        cropMapToBounds: false,
+        waterHeightMM: 100,
+        greeneryHeightMM: 100,
+        beachHeightMM: 100,
+        pierHeightMM: 100,
+        minWaterAreaM2: 0,
+        footpathRoadsEnabled: true,
+        oceanEnabled: true,
+        beachEnabled: false,
+        piersEnabled: false,
 };
 
 function createModelConfigStore() {

@@ -63,18 +63,27 @@ export const POST: RequestHandler = async ({ request }) => {
 		return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 });
 	}
 
-	const {
-		scale,
-		baseHeight = 0,
-		buildingMultiplier = 1,
-		minArea = 0,
-		minBuildingHeightMM = 0,
-		clipToShape = false,
-		elements,
-		bbox,
-		shape,
-		route,
-		routeBufferMeters,
+        const {
+                scale,
+                baseHeight = 0,
+                buildingMultiplier = 1,
+                minArea = 0,
+                minBuildingHeightMM = 0,
+                clipToShape = false,
+                waterHeightMM = 100,
+                greeneryHeightMM = 100,
+                beachHeightMM = 100,
+                pierHeightMM = 100,
+                minWaterAreaM2 = 0,
+                footpathRoadsEnabled = true,
+                oceanEnabled = true,
+                beachEnabled = false,
+                piersEnabled = false,
+                elements,
+                bbox,
+                shape,
+                route,
+                routeBufferMeters,
 		corridorOnly = false,
 		invalidate = false,
 	} = payload || {};
@@ -102,13 +111,22 @@ export const POST: RequestHandler = async ({ request }) => {
 		baseHeight,
 		buildingMultiplier,
 		minArea,
-		minBuildingHeightMM,
-		clipToShape,
-		elements,
-		shape: polygon || routePolygon,
-		bbox,
-		routeBufferMeters,
-		corridorOnly,
+                minBuildingHeightMM,
+                clipToShape,
+                waterHeightMM,
+                greeneryHeightMM,
+                beachHeightMM,
+                pierHeightMM,
+                minWaterAreaM2,
+                footpathRoadsEnabled,
+                oceanEnabled,
+                beachEnabled,
+                piersEnabled,
+                elements,
+                shape: polygon || routePolygon,
+                bbox,
+                routeBufferMeters,
+                corridorOnly,
 	});
 
 	// determine tiling
@@ -157,7 +175,17 @@ export const POST: RequestHandler = async ({ request }) => {
 			tileResult = CACHE.get(tileKey);
 		} else {
 			cacheHit = false;
-			const query = buildOverpassQuery(elements, tile, usePolygon ? polyForArea : undefined);
+                        const query = buildOverpassQuery(
+                                elements,
+                                tile,
+                                usePolygon ? polyForArea : undefined,
+                                {
+                                        footpathRoadsEnabled,
+                                        beachEnabled,
+                                        piersEnabled,
+                                        oceanEnabled,
+                                }
+                        );
 			let data;
 			try {
 				const res = await fetchOverpass(query);
@@ -175,15 +203,19 @@ export const POST: RequestHandler = async ({ request }) => {
 							: 'Overpass request failed';
 				return new Response(JSON.stringify({ error: message }), { status });
 			}
-			tileResult = convertTo3D(
-				data,
-				scale,
-				baseHeight,
-				buildingMultiplier,
-				minArea,
-				clipToShape ? polygon : undefined,
-				minBuildingHeightMM
-			);
+                        tileResult = convertTo3D(data, scale, baseHeight, buildingMultiplier, {
+                                minBuildingAreaM2: minArea,
+                                clipPolygon: clipToShape ? polygon : undefined,
+                                minBuildingHeightMM,
+                                waterHeightMM,
+                                greeneryHeightMM,
+                                beachHeightMM,
+                                pierHeightMM,
+                                minWaterAreaM2,
+                                beachEnabled,
+                                piersEnabled,
+                                oceanEnabled,
+                        });
 			CACHE.set(tileKey, tileResult);
 		}
 		for (const f of tileResult.features) {

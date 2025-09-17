@@ -2,9 +2,11 @@ export const COLORS = {
 	building_residential: '#6aa7ff',
 	building_commercial: '#4f7bd9',
 	building_industrial: '#7189aa',
-	water: '#7ec8e3',
-	green: '#78c27a',
-	route: '#ff524f',
+        water: '#7ec8e3',
+        green: '#78c27a',
+        sand: '#f5deb3',
+        pier: '#cccccc',
+        route: '#ff524f',
 } as const;
 
 export const SLOPE_GRADIENT = [

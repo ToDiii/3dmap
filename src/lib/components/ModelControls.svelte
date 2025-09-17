@@ -27,16 +27,17 @@
 
 	onDestroy(unsubscribe);
 
-	function updateStore() {
-		modelConfigStore.set({
-			scale,
-			baseHeight,
-			buildingMultiplier,
-			elements: { ...elements },
-			excludeSmallBuildings,
-			minBuildingArea,
-		});
-	}
+        function updateStore() {
+                modelConfigStore.update((cfg) => ({
+                        ...cfg,
+                        scale,
+                        baseHeight,
+                        buildingMultiplier,
+                        elements: { ...elements },
+                        excludeSmallBuildings,
+                        minBuildingArea,
+                }));
+        }
 </script>
 
 <div class="space-y-4">

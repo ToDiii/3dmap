@@ -21,20 +21,29 @@ export function parseM2M(json: unknown): M2MProject {
 
 export async function applyM2M(project: M2MProject): Promise<void> {
 	const g = project.generatorOptions;
-	modelConfigStore.update((cfg) => ({
-		...cfg,
-		buildingMultiplier: g.buildingScaleFactor,
-		elements: {
-			buildings: g.buildingsEnabled,
-			roads: g.roadEnabled,
-			water: g.waterEnabled,
-			green: g.greeneryEnabled,
-		},
-		excludeSmallBuildings: g.minBuildingAreaM2 > 0,
-		minBuildingArea: g.minBuildingAreaM2,
-		minBuildingHeightMM: g.minBuildingHeightMM,
-		cropMapToBounds: g.cropMapToBounds,
-	}));
+        modelConfigStore.update((cfg) => ({
+                ...cfg,
+                buildingMultiplier: g.buildingScaleFactor,
+                elements: {
+                        buildings: g.buildingsEnabled,
+                        roads: g.roadEnabled,
+                        water: g.waterEnabled,
+                        green: g.greeneryEnabled,
+                },
+                excludeSmallBuildings: g.minBuildingAreaM2 > 0,
+                minBuildingArea: g.minBuildingAreaM2,
+                minBuildingHeightMM: g.minBuildingHeightMM,
+                cropMapToBounds: g.cropMapToBounds,
+                waterHeightMM: g.waterHeightMM,
+                greeneryHeightMM: g.greeneryHeightMM,
+                beachHeightMM: g.beachHeightMM,
+                pierHeightMM: g.pierHeightMM,
+                minWaterAreaM2: g.minWaterAreaM2,
+                footpathRoadsEnabled: g.footpathRoadsEnabled,
+                oceanEnabled: g.oceanEnabled,
+                beachEnabled: g.beachEnabled,
+                piersEnabled: g.piersEnabled,
+        }));
 
 	uiConfigStore.update((cfg) => ({
 		...cfg,
