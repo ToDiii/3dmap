@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type * as GeoJSON from 'geojson';
 import { buildOverpassQuery, convertTo3D } from './overpass';
 
 describe('buildOverpassQuery', () => {
@@ -29,6 +30,29 @@ describe('buildOverpassQuery', () => {
 		const q = buildOverpassQuery(['water'], [1, 2, 3, 4], shape);
 		expect(q).toContain('poly:"1 1 1 2 2 2 2 1 1 1"');
 		expect(q).not.toContain('(1,2,3,4)');
+	});
+
+	it('filters footpaths when disabled', () => {
+		const q = buildOverpassQuery(['roads'], [1, 2, 3, 4], undefined, {
+			footpathRoadsEnabled: false,
+		});
+		expect(q).toContain('["highway"!~"^(footway|path|pedestrian|cycleway|steps)$"]');
+	});
+
+	it('adds beaches and piers when enabled', () => {
+		const q = buildOverpassQuery(['water'], undefined, undefined, {
+			beachEnabled: true,
+			piersEnabled: true,
+		});
+		expect(q).toContain('"man_made"="pier"');
+		expect(q).toContain('"natural"~"^(sand|beach)$"');
+	});
+
+	it('excludes oceans when disabled', () => {
+		const q = buildOverpassQuery(['water'], undefined, undefined, {
+			oceanEnabled: false,
+		});
+		expect(q).toContain('["water"!~"^(sea|ocean)$"]');
 	});
 });
 
@@ -110,7 +134,7 @@ describe('convertTo3D', () => {
 			],
 			tags: { building: 'yes' },
 		};
-		const res = convertTo3D({ elements: [small] }, 100, 0, 1, 1_000_000);
+		const res = convertTo3D({ elements: [small] }, 100, 0, 1, { minBuildingAreaM2: 1_000_000 });
 		expect(res.features).toHaveLength(0);
 		expect(res.geojson.features).toHaveLength(0);
 	});
@@ -126,7 +150,7 @@ describe('convertTo3D', () => {
 			],
 			tags: { building: 'yes', height: '0' },
 		};
-		const res = convertTo3D({ elements: [b] }, 100, 0, 1, 0, undefined, 5);
+		const res = convertTo3D({ elements: [b] }, 100, 0, 1, { minBuildingHeightMM: 5 });
 		expect(res.features[0].height).toBeCloseTo(0.005, 3);
 	});
 
@@ -153,7 +177,63 @@ describe('convertTo3D', () => {
 				],
 			],
 		};
-		const res = convertTo3D({ elements: [b] }, 100, 0, 1, 0, clip, 5);
+		const res = convertTo3D({ elements: [b] }, 100, 0, 1, {
+			clipPolygon: clip,
+			minBuildingHeightMM: 5,
+		});
+		expect(res.features).toHaveLength(0);
+	});
+
+	it('respects mm heights and emits sand and pier features', () => {
+		const polygon = [
+			{ lon: 0, lat: 0 },
+			{ lon: 0, lat: 1 },
+			{ lon: 1, lat: 1 },
+			{ lon: 1, lat: 0 },
+			{ lon: 0, lat: 0 },
+		];
+		const data = {
+			elements: [
+				{ id: 20, geometry: polygon, tags: { natural: 'water' } },
+				{ id: 21, geometry: polygon, tags: { leisure: 'park' } },
+				{ id: 22, geometry: polygon, tags: { natural: 'sand' } },
+				{ id: 23, geometry: polygon, tags: { man_made: 'pier' } },
+			],
+		};
+		const res = convertTo3D(data, 1, 0, 1, {
+			waterHeightMM: 50,
+			greeneryHeightMM: 75,
+			beachHeightMM: 30,
+			pierHeightMM: 120,
+			beachEnabled: true,
+			piersEnabled: true,
+		});
+		const water = res.features.find((f) => f.type === 'water');
+		const green = res.features.find((f) => f.type === 'green');
+		const sand = res.features.find((f) => f.type === 'sand');
+		const pier = res.features.find((f) => f.type === 'pier');
+		expect(water?.height).toBeCloseTo(0.05, 5);
+		expect(green?.height).toBeCloseTo(0.075, 5);
+		expect(sand?.height).toBeCloseTo(0.03, 5);
+		expect(pier?.height).toBeCloseTo(0.12, 5);
+		const sandFeature = res.geojson.features.find((f) => f.properties?.featureType === 'sand');
+		expect(sandFeature?.properties?.height_final).toBeCloseTo(0.03, 5);
+		const pierFeature = res.geojson.features.find((f) => f.properties?.featureType === 'pier');
+		expect(pierFeature?.properties?.height_final).toBeCloseTo(0.12, 5);
+	});
+
+	it('omits ocean water when disabled', () => {
+		const polygon = [
+			{ lon: 0, lat: 0 },
+			{ lon: 0, lat: 1 },
+			{ lon: 1, lat: 1 },
+			{ lon: 1, lat: 0 },
+			{ lon: 0, lat: 0 },
+		];
+		const data = {
+			elements: [{ id: 30, geometry: polygon, tags: { natural: 'water', water: 'sea' } }],
+		};
+		const res = convertTo3D(data, 1, 0, 1, { oceanEnabled: false });
 		expect(res.features).toHaveLength(0);
 	});
 });

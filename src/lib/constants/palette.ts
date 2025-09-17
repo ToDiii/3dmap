@@ -4,6 +4,8 @@ export const COLORS = {
 	building_industrial: '#7189aa',
 	water: '#7ec8e3',
 	green: '#78c27a',
+	sand: '#f5deb3',
+	pier: '#cccccc',
 	route: '#ff524f',
 } as const;
 

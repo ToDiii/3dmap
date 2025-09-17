@@ -13,6 +13,15 @@ describe('modelConfigStore', () => {
 			minBuildingArea: 50,
 			minBuildingHeightMM: 0,
 			cropMapToBounds: false,
+			waterHeightMM: 100,
+			greeneryHeightMM: 100,
+			beachHeightMM: 100,
+			pierHeightMM: 100,
+			minWaterAreaM2: 0,
+			footpathRoadsEnabled: true,
+			oceanEnabled: true,
+			beachEnabled: false,
+			piersEnabled: false,
 		});
 	});
 

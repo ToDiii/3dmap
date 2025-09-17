@@ -6,11 +6,39 @@ import buffer from '@turf/buffer';
 import { lineString } from '@turf/helpers';
 import { getRoadWidthMeters, getWaterwayWidthMeters } from '$lib/model/widths';
 
+interface BuildOverpassQueryOptions {
+	footpathRoadsEnabled?: boolean;
+	piersEnabled?: boolean;
+	beachEnabled?: boolean;
+	oceanEnabled?: boolean;
+}
+
+interface ConvertOptions {
+	minBuildingAreaM2?: number;
+	clipPolygon?: Polygon;
+	minBuildingHeightMM?: number;
+	waterHeightMM?: number;
+	greeneryHeightMM?: number;
+	beachHeightMM?: number;
+	pierHeightMM?: number;
+	minWaterAreaM2?: number;
+	beachEnabled?: boolean;
+	piersEnabled?: boolean;
+	oceanEnabled?: boolean;
+}
+
 export function buildOverpassQuery(
 	elements: string[],
 	bbox?: [number, number, number, number],
-	shape?: Polygon
+	shape?: Polygon,
+	options: BuildOverpassQueryOptions = {}
 ): string {
+	const {
+		footpathRoadsEnabled = true,
+		piersEnabled = false,
+		beachEnabled = false,
+		oceanEnabled = true,
+	} = options;
 	// area restriction: prefer shape polygon, fallback to bbox
 	const areaPart = shape
 		? `(poly:"${shape.coordinates[0].map(([lng, lat]) => `${lat} ${lng}`).join(' ')}")`
@@ -22,10 +50,21 @@ export function buildOverpassQuery(
 		query += `way["building"]${areaPart};relation["building"]${areaPart};`;
 	}
 	if (elements.includes('roads')) {
-		query += `way["highway"]${areaPart};`;
+		if (footpathRoadsEnabled) {
+			query += `way["highway"]${areaPart};`;
+		} else {
+			query += `way["highway"]["highway"!~"^(footway|path|pedestrian|cycleway|steps)$"]${areaPart};`;
+		}
 	}
 	if (elements.includes('water')) {
-		query += `way["natural"="water"]${areaPart};relation["natural"="water"]${areaPart};way["waterway"]${areaPart};`;
+		const oceanFilter = oceanEnabled ? '' : '["water"!~"^(sea|ocean)$"]';
+		query += `way["natural"="water"]${oceanFilter}${areaPart};relation["natural"="water"]${oceanFilter}${areaPart};way["waterway"]${areaPart};`;
+		if (piersEnabled) {
+			query += `way["man_made"="pier"]${areaPart};relation["man_made"="pier"]${areaPart};`;
+		}
+		if (beachEnabled) {
+			query += `way["natural"~"^(sand|beach)$"]${areaPart};relation["natural"~"^(sand|beach)$"]${areaPart};`;
+		}
 	}
 	if (elements.includes('green')) {
 		query += `way["leisure"="park"]${areaPart};relation["leisure"="park"]${areaPart};way["landuse"="grass"]${areaPart};relation["landuse"="grass"]${areaPart};`;
@@ -39,10 +78,25 @@ export function convertTo3D(
 	scale: number,
 	baseHeight: number,
 	buildingMultiplier: number,
-	minArea = 0,
-	clipPolygon?: Polygon,
-	minBuildingHeightMM = 0
+	options: ConvertOptions = {}
 ) {
+	const {
+		minBuildingAreaM2 = 0,
+		clipPolygon,
+		minBuildingHeightMM = 0,
+		waterHeightMM = 100,
+		greeneryHeightMM = 100,
+		beachHeightMM = 100,
+		pierHeightMM = 100,
+		minWaterAreaM2 = 0,
+		beachEnabled = false,
+		piersEnabled = false,
+		oceanEnabled = true,
+	} = options;
+	const waterHeight = baseHeight + waterHeightMM / 1000;
+	const greenHeight = baseHeight + greeneryHeightMM / 1000;
+	const beachHeight = baseHeight + beachHeightMM / 1000;
+	const pierHeight = baseHeight + pierHeightMM / 1000;
 	const features: any[] = [];
 	const geoFeatures: Feature[] = [];
 	for (const element of data.elements || []) {
@@ -81,7 +135,7 @@ export function convertTo3D(
 			const subtype = mapBuildingSubtype(tags);
 			for (const polyCoords of polys) {
 				const a = area({ type: 'Polygon', coordinates: [polyCoords] } as any);
-				if (minArea > 0 && a < minArea) continue;
+				if (minBuildingAreaM2 > 0 && a < minBuildingAreaM2) continue;
 				const coords = polyCoords.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]);
 				let heightRaw = 0;
 				if (tags.height) {
@@ -122,7 +176,7 @@ export function convertTo3D(
 				buf.type === 'Polygon' ? [buf.coordinates[0]] : buf.coordinates.map((c) => c[0]);
 			for (const poly of polys) {
 				const a = area({ type: 'Polygon', coordinates: [poly] } as any);
-				if (minArea > 0 && a < minArea) continue;
+				if (minBuildingAreaM2 > 0 && a < minBuildingAreaM2) continue;
 				const coords = poly.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]);
 				const height = baseHeight + 0.2;
 				features.push({ id: element.id, type: 'road', geometry: coords, height });
@@ -150,9 +204,9 @@ export function convertTo3D(
 				buf.type === 'Polygon' ? [buf.coordinates[0]] : buf.coordinates.map((c) => c[0]);
 			for (const poly of polys) {
 				const a = area({ type: 'Polygon', coordinates: [poly] } as any);
-				if (minArea > 0 && a < minArea) continue;
+				if (minWaterAreaM2 > 0 && a < minWaterAreaM2) continue;
 				const coords = poly.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]);
-				const height = baseHeight + 0.1;
+				const height = waterHeight;
 				features.push({ id: element.id, type: 'water', geometry: coords, height });
 				geoFeatures.push({
 					type: 'Feature',
@@ -171,6 +225,7 @@ export function convertTo3D(
 			continue;
 		}
 		if (tags.natural === 'water') {
+			if (!oceanEnabled && (tags.water === 'sea' || tags.water === 'ocean')) continue;
 			const poly = element.geometry.map((p: any) => [p.lon, p.lat]);
 			if (
 				poly.length > 0 &&
@@ -179,12 +234,12 @@ export function convertTo3D(
 				poly.push(poly[0]);
 			}
 			const a = area({ type: 'Polygon', coordinates: [poly] } as any);
-			if (minArea > 0 && a < minArea) continue;
+			if (minWaterAreaM2 > 0 && a < minWaterAreaM2) continue;
 			features.push({
 				id: element.id,
 				type: 'water',
 				geometry: poly.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]),
-				height: baseHeight + 0.1,
+				height: waterHeight,
 			});
 			geoFeatures.push({
 				type: 'Feature',
@@ -194,7 +249,68 @@ export function convertTo3D(
 					kind: 'water',
 					area_m2: a,
 					base_height: baseHeight,
-					height_final: baseHeight + 0.1,
+					height_final: waterHeight,
+					name,
+				},
+			});
+			continue;
+		}
+		if (
+			beachEnabled &&
+			(tags.natural === 'sand' || tags.natural === 'beach' || tags.landuse === 'beach')
+		) {
+			const poly = element.geometry.map((p: any) => [p.lon, p.lat]);
+			if (
+				poly.length > 0 &&
+				(poly[0][0] !== poly[poly.length - 1][0] || poly[0][1] !== poly[poly.length - 1][1])
+			) {
+				poly.push(poly[0]);
+			}
+			const a = area({ type: 'Polygon', coordinates: [poly] } as any);
+			features.push({
+				id: element.id,
+				type: 'sand',
+				geometry: poly.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]),
+				height: beachHeight,
+			});
+			geoFeatures.push({
+				type: 'Feature',
+				geometry: { type: 'Polygon', coordinates: [poly] },
+				properties: {
+					featureType: 'sand',
+					kind: 'beach',
+					area_m2: a,
+					base_height: baseHeight,
+					height_final: beachHeight,
+					name,
+				},
+			});
+			continue;
+		}
+		if (piersEnabled && tags.man_made === 'pier') {
+			const poly = element.geometry.map((p: any) => [p.lon, p.lat]);
+			if (
+				poly.length > 0 &&
+				(poly[0][0] !== poly[poly.length - 1][0] || poly[0][1] !== poly[poly.length - 1][1])
+			) {
+				poly.push(poly[0]);
+			}
+			if (poly.length < 4) continue;
+			const a = area({ type: 'Polygon', coordinates: [poly] } as any);
+			features.push({
+				id: element.id,
+				type: 'pier',
+				geometry: poly.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]),
+				height: pierHeight,
+			});
+			geoFeatures.push({
+				type: 'Feature',
+				geometry: { type: 'Polygon', coordinates: [poly] },
+				properties: {
+					featureType: 'pier',
+					area_m2: a,
+					base_height: baseHeight,
+					height_final: pierHeight,
 					name,
 				},
 			});
@@ -209,12 +325,12 @@ export function convertTo3D(
 				poly.push(poly[0]);
 			}
 			const a = area({ type: 'Polygon', coordinates: [poly] } as any);
-			if (minArea > 0 && a < minArea) continue;
+			if (minBuildingAreaM2 > 0 && a < minBuildingAreaM2) continue;
 			features.push({
 				id: element.id,
 				type: 'green',
 				geometry: poly.map(([lon, lat]: any) => [lon * scale, baseHeight, lat * scale]),
-				height: baseHeight + 0.1,
+				height: greenHeight,
 			});
 			geoFeatures.push({
 				type: 'Feature',
@@ -223,7 +339,7 @@ export function convertTo3D(
 					featureType: 'green',
 					area_m2: a,
 					base_height: baseHeight,
-					height_final: baseHeight + 0.1,
+					height_final: greenHeight,
 					name,
 				},
 			});
