@@ -34,6 +34,15 @@ export async function applyM2M(project: M2MProject): Promise<void> {
 		minBuildingArea: g.minBuildingAreaM2,
 		minBuildingHeightMM: g.minBuildingHeightMM,
 		cropMapToBounds: g.cropMapToBounds,
+		waterHeightMM: g.waterHeightMM,
+		greeneryHeightMM: g.greeneryHeightMM,
+		beachHeightMM: g.beachHeightMM,
+		pierHeightMM: g.pierHeightMM,
+		minWaterAreaM2: g.minWaterAreaM2,
+		footpathRoadsEnabled: g.footpathRoadsEnabled,
+		oceanEnabled: g.oceanEnabled,
+		beachEnabled: g.beachEnabled,
+		piersEnabled: g.piersEnabled,
 	}));
 
 	uiConfigStore.update((cfg) => ({

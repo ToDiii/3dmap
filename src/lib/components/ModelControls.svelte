@@ -28,14 +28,15 @@
 	onDestroy(unsubscribe);
 
 	function updateStore() {
-		modelConfigStore.set({
+		modelConfigStore.update((cfg) => ({
+			...cfg,
 			scale,
 			baseHeight,
 			buildingMultiplier,
 			elements: { ...elements },
 			excludeSmallBuildings,
 			minBuildingArea,
-		});
+		}));
 	}
 </script>
 

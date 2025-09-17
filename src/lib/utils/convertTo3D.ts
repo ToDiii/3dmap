@@ -5,7 +5,7 @@ export interface Feature {
 	id?: number | string;
 	geometry: SimplePolygon | SimplePolygon[];
 	height: number;
-	type: 'building' | 'road' | 'water' | 'green' | 'other';
+	type: 'building' | 'road' | 'water' | 'green' | 'sand' | 'pier' | 'other';
 	subtype?:
 		| 'building_residential'
 		| 'building_commercial'

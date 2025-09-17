@@ -16,6 +16,15 @@ export interface ModelConfig {
 	minBuildingArea: number;
 	minBuildingHeightMM: number;
 	cropMapToBounds: boolean;
+	waterHeightMM: number;
+	greeneryHeightMM: number;
+	beachHeightMM: number;
+	pierHeightMM: number;
+	minWaterAreaM2: number;
+	footpathRoadsEnabled: boolean;
+	oceanEnabled: boolean;
+	beachEnabled: boolean;
+	piersEnabled: boolean;
 }
 
 const defaultConfig: ModelConfig = {
@@ -32,6 +41,15 @@ const defaultConfig: ModelConfig = {
 	minBuildingArea: 50,
 	minBuildingHeightMM: 0,
 	cropMapToBounds: false,
+	waterHeightMM: 100,
+	greeneryHeightMM: 100,
+	beachHeightMM: 100,
+	pierHeightMM: 100,
+	minWaterAreaM2: 0,
+	footpathRoadsEnabled: true,
+	oceanEnabled: true,
+	beachEnabled: false,
+	piersEnabled: false,
 };
 
 function createModelConfigStore() {

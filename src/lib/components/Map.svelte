@@ -2,7 +2,8 @@
 	import type { Feature, FeatureCollection, LineString } from 'geojson';
 	import maplibregl from 'maplibre-gl';
 	import 'maplibre-gl/dist/maplibre-gl.css';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import { get } from 'svelte/store';
 	import { mapStore } from '$lib/stores/map';
 	import { extrudeGroupStore } from '$lib/stores/extrudeGroupStore';
 	import { modelGeo } from '$lib/stores/modelGeoStore';
@@ -11,6 +12,7 @@
 	import * as THREE from 'three';
 	import { COLORS } from '$lib/constants/palette';
 	import { getBuildingMaterial, disposeBuildingMaterials } from '$lib/three/materials';
+	import { colorPalette } from '$lib/stores/colorPalette';
 
 	export let map: maplibregl.Map | undefined;
 
@@ -29,8 +31,32 @@
 	let unsubGeo: (() => void) | null = null;
 	let unsubErr: (() => void) | null = null;
 	let toastMessage: string | null = null;
+	let unsubPalette: (() => void) | null = null;
 
 	const emptyFC: FeatureCollection = { type: 'FeatureCollection', features: [] };
+
+	let palette = get(colorPalette);
+	unsubPalette = colorPalette.subscribe((p) => {
+		palette = p;
+		if (!map) return;
+		const setPaint = (layer: string, prop: string, value: any) => {
+			if (map?.getLayer(layer)) {
+				map.setPaintProperty(layer, prop, value);
+			}
+		};
+		setPaint('model-water', 'fill-color', palette.water);
+		setPaint('model-green', 'fill-color', palette.greenery);
+		setPaint('model-sand', 'fill-color', palette.sand);
+		setPaint('model-roads', 'fill-extrusion-color', palette.road);
+		setPaint('model-piers', 'fill-extrusion-color', palette.pier);
+	});
+
+	onDestroy(() => {
+		if (unsubPalette) {
+			unsubPalette();
+			unsubPalette = null;
+		}
+	});
 
 	function clearGroup(group: THREE.Group, disposeMaterials = false) {
 		group.traverse((obj) => {
@@ -114,7 +140,7 @@
 				type: 'fill',
 				source: 'model-geo',
 				filter: ['==', ['get', 'featureType'], 'water'],
-				paint: { 'fill-color': COLORS.water, 'fill-opacity': 0.5 },
+				paint: { 'fill-color': palette.water, 'fill-opacity': 0.5 },
 			});
 		}
 		if (!map.getLayer('model-green')) {
@@ -123,7 +149,16 @@
 				type: 'fill',
 				source: 'model-geo',
 				filter: ['==', ['get', 'featureType'], 'green'],
-				paint: { 'fill-color': COLORS.green, 'fill-opacity': 0.5 },
+				paint: { 'fill-color': palette.greenery, 'fill-opacity': 0.5 },
+			});
+		}
+		if (!map.getLayer('model-sand')) {
+			map.addLayer({
+				id: 'model-sand',
+				type: 'fill',
+				source: 'model-geo',
+				filter: ['==', ['get', 'featureType'], 'sand'],
+				paint: { 'fill-color': palette.sand, 'fill-opacity': 0.5 },
 			});
 		}
 		if (!map.getLayer('model-roads')) {
@@ -133,7 +168,21 @@
 				source: 'model-geo',
 				filter: ['==', ['get', 'featureType'], 'road'],
 				paint: {
-					'fill-extrusion-color': COLORS.road,
+					'fill-extrusion-color': palette.road,
+					'fill-extrusion-height': ['get', 'height_final'],
+					'fill-extrusion-base': ['get', 'base_height'],
+					'fill-extrusion-opacity': 0.9,
+				},
+			});
+		}
+		if (!map.getLayer('model-piers')) {
+			map.addLayer({
+				id: 'model-piers',
+				type: 'fill-extrusion',
+				source: 'model-geo',
+				filter: ['==', ['get', 'featureType'], 'pier'],
+				paint: {
+					'fill-extrusion-color': palette.pier,
 					'fill-extrusion-height': ['get', 'height_final'],
 					'fill-extrusion-base': ['get', 'base_height'],
 					'fill-extrusion-opacity': 0.9,
@@ -204,7 +253,14 @@
 			const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
 			map!.on('mousemove', (e) => {
 				const feats = map!.queryRenderedFeatures(e.point, {
-					layers: ['extrude-buildings', 'model-water', 'model-green', 'model-roads'],
+					layers: [
+						'extrude-buildings',
+						'model-water',
+						'model-green',
+						'model-sand',
+						'model-roads',
+						'model-piers',
+					],
 				});
 				if (feats.length === 0) {
 					popup.remove();
@@ -226,6 +282,10 @@
 			if (unsubGeo) unsubGeo();
 			if (unsubErr) unsubErr();
 			if (unsubRoute) unsubRoute();
+			if (unsubPalette) {
+				unsubPalette();
+				unsubPalette = null;
+			}
 			mapStore.set(undefined);
 			extrudeGroupStore.set(null);
 			map?.remove();

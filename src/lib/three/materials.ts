@@ -9,6 +9,8 @@ export const basicMaterials: Record<string, THREE.MeshStandardMaterial> = {
 	road: new THREE.MeshStandardMaterial({ color: palette.road }),
 	water: new THREE.MeshStandardMaterial({ color: palette.water }),
 	green: new THREE.MeshStandardMaterial({ color: palette.greenery }),
+	sand: new THREE.MeshStandardMaterial({ color: palette.sand }),
+	pier: new THREE.MeshStandardMaterial({ color: palette.pier }),
 };
 
 colorPalette.subscribe((p) => {
@@ -17,6 +19,8 @@ colorPalette.subscribe((p) => {
 	basicMaterials.road.color.set(p.road);
 	basicMaterials.water.color.set(p.water);
 	basicMaterials.green.color.set(p.greenery);
+	basicMaterials.sand.color.set(p.sand);
+	basicMaterials.pier.color.set(p.pier);
 });
 
 export function getBuildingMaterial(_subtype: string) {

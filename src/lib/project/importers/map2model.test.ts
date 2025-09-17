@@ -73,6 +73,15 @@ describe('map2model importer', () => {
 		await applyM2M(proj);
 		expect(get(modelConfigStore).minBuildingHeightMM).toBe(5);
 		expect(get(modelConfigStore).cropMapToBounds).toBe(true);
+		expect(get(modelConfigStore).waterHeightMM).toBe(0);
+		expect(get(modelConfigStore).greeneryHeightMM).toBe(0);
+		expect(get(modelConfigStore).beachHeightMM).toBe(0);
+		expect(get(modelConfigStore).pierHeightMM).toBe(0);
+		expect(get(modelConfigStore).minWaterAreaM2).toBe(0);
+		expect(get(modelConfigStore).footpathRoadsEnabled).toBe(false);
+		expect(get(modelConfigStore).oceanEnabled).toBe(false);
+		expect(get(modelConfigStore).beachEnabled).toBe(false);
+		expect(get(modelConfigStore).piersEnabled).toBe(false);
 		expect(get(uiConfigStore).baseLayerMM).toBe(2);
 		expect(get(uiConfigStore).frame.enabled).toBe(true);
 		expect(get(colorPalette).road).toBe('#111');
