@@ -55,16 +55,19 @@ export async function applyM2M(project: M2MProject): Promise<void> {
 		},
 	}));
 
-	colorPalette.update((p) => ({
-		...p,
-		road: g.roadColor,
-		water: g.waterColor,
-		greenery: g.greeneryColor,
-		building: g.buildingColor,
-		sand: g.sandColor,
-		pier: g.pierColor,
-		base: g.baseColor,
-	}));
+        colorPalette.update((p) => ({
+                ...p,
+                road: g.roadColor ?? p.road,
+                water: g.waterColor ?? p.water,
+                greenery: g.greeneryColor ?? p.greenery,
+                building: g.buildingColor ?? p.building,
+                buildingResidential: g.buildingColor ?? p.buildingResidential,
+                buildingCommercial: g.buildingColor ?? p.buildingCommercial,
+                buildingIndustrial: g.buildingColor ?? p.buildingIndustrial,
+                sand: g.sandColor ?? p.sand,
+                pier: g.pierColor ?? p.pier,
+                base: g.baseColor ?? p.base,
+        }));
 
 	if (project.areaPolygon) {
 		shapeStore.set(project.areaPolygon);
