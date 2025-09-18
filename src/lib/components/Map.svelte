@@ -10,6 +10,7 @@
 	import { modelError } from '$lib/stores/modelStore';
 	import { pathStore } from '$lib/stores/pathStore';
 	import { pathStyleStore } from '$lib/stores/pathStyleStore';
+	import type { PathStyle } from '$lib/stores/pathStyleStore';
 	import * as THREE from 'three';
 	import { getBuildingMaterial, disposeBuildingMaterials } from '$lib/three/materials';
 	import { colorPalette } from '$lib/stores/colorPalette';
@@ -39,6 +40,13 @@
 
 	let palette: ColorPalette = get(colorPalette);
 	let pathStyle = get(pathStyleStore);
+
+	function getRouteLineWidth(style: PathStyle): number {
+		if (style.widthMeters && style.widthMeters > 0) {
+			return Math.max(style.widthMeters, 1);
+		}
+		return 4;
+	}
 
 	function buildingColorExpression(p: ColorPalette) {
 		return [
@@ -73,6 +81,7 @@
 		if (!map) return;
 		if (map.getLayer(routeLayerId)) {
 			map.setPaintProperty(routeLayerId, 'line-color', pathStyle.color);
+			map.setPaintProperty(routeLayerId, 'line-width', getRouteLineWidth(pathStyle));
 		}
 	}
 
@@ -271,7 +280,10 @@
 							id: routeLayerId,
 							type: 'line',
 							source: routeSourceId,
-							paint: { 'line-color': pathStyle.color, 'line-width': 4 },
+							paint: {
+								'line-color': pathStyle.color,
+								'line-width': getRouteLineWidth(pathStyle),
+							},
 						});
 					}
 				} else {
