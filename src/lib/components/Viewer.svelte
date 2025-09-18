@@ -7,7 +7,8 @@
 	import { exportTo3MF as export3MF } from 'three-3mf-exporter';
 	import { onMount } from 'svelte';
 	import { modelConfigStore } from '$lib/stores/modelConfigStore';
-	import { pathStore } from '$lib/stores/pathStore';
+        import { pathStore } from '$lib/stores/pathStore';
+        import { pathStyleStore } from '$lib/stores/pathStyleStore';
 	import { modelStore, modelLoading, modelError } from '$lib/stores/modelStore';
 	import { routeStore } from '$lib/stores/routeStore';
 	import { uiConfigStore } from '$lib/stores/uiConfigStore';
@@ -37,11 +38,12 @@
 	colorPalette.subscribe((v) => (palette = v));
 	let toastMessage: string | null = null;
 	let loadError: string | null = null;
-	let currentScale = 1;
-	let currentBaseHeight = 0;
-	let path: GeoJSON.LineString | null = null;
-	let elevations: number[] | undefined;
-	let isLoading = false;
+        let currentScale = 1;
+        let currentBaseHeight = 0;
+        let path: GeoJSON.LineString | null = null;
+        let elevations: number[] | undefined;
+        let isLoading = false;
+        let pathStyle = get(pathStyleStore);
 	const raycaster = new THREE.Raycaster();
 	const pointer = new THREE.Vector2();
 	let hoverText: string | null = null;
@@ -90,45 +92,84 @@
 		hoverText = null;
 	}
 
-	function buildPathGeometry(p: GeoJSON.LineString | null, baseHeight: number, scale: number) {
-		clearGroup(pathGroup, true);
-		if (!p || p.coordinates.length < 2) return;
-		const coords = p.coordinates as [number, number][];
-		const pts: THREE.Vector3[] = [];
-		const grades: number[] = [];
-		for (let i = 0; i < coords.length; i++) {
-			const [lon, lat] = coords[i];
-			const elev = elevations?.[i] ?? 0;
-			pts.push(new THREE.Vector3(lon * scale, baseHeight + elev + 0.1, lat * scale));
-			if (i < coords.length - 1) {
-				const elev2 = elevations?.[i + 1] ?? elev;
-				const dist = haversine(coords[i], coords[i + 1]);
-				const grade = dist === 0 ? 0 : (elev2 - elev) / dist;
-				grades.push(grade);
-			}
-		}
-		const segments = pts.length - 1;
-		const radial = 8;
-		const curve = new THREE.CatmullRomCurve3(pts);
-		const geom = new THREE.TubeGeometry(curve, segments, 0.5, radial, false);
-		const colors = new Float32Array((segments + 1) * (radial + 1) * 3);
-		for (let i = 0; i <= segments; i++) {
-			const g = i === segments ? grades[segments - 1] : grades[i];
-			const col = new THREE.Color(interpolateSlopeColor(g));
-			for (let j = 0; j <= radial; j++) {
-				const idx = (i * (radial + 1) + j) * 3;
-				colors[idx] = col.r;
-				colors[idx + 1] = col.g;
-				colors[idx + 2] = col.b;
-			}
-		}
-		geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-		const mat = new THREE.MeshStandardMaterial({ vertexColors: true });
-		const mesh = new THREE.Mesh(geom, mat);
-		mesh.userData = { grades };
-		pathGroup.add(mesh);
-		if (!modelGroup.children.includes(pathGroup)) {
-			modelGroup.add(pathGroup);
+        function buildPathGeometry(p: GeoJSON.LineString | null, baseHeight: number, scale: number) {
+                clearGroup(pathGroup, true);
+                if (!p || p.coordinates.length < 2) return;
+                const coords = p.coordinates as [number, number][];
+                const pts: THREE.Vector3[] = [];
+                const grades: number[] = [];
+                const { widthMeters, heightMM, color } = pathStyle;
+                const baseOffset = Math.max((heightMM ?? 0) / 1000, 0.001);
+                let unitsPerMeter: number | null = null;
+                for (let i = 0; i < coords.length; i++) {
+                        const [lon, lat] = coords[i];
+                        const elev = elevations?.[i] ?? 0;
+                        const point = new THREE.Vector3(
+                                lon * scale,
+                                baseHeight + elev + baseOffset,
+                                lat * scale,
+                        );
+                        pts.push(point);
+                        if (i < coords.length - 1) {
+                                const elev2 = elevations?.[i + 1] ?? elev;
+                                const dist = haversine(coords[i], coords[i + 1]);
+                                const grade = dist === 0 ? 0 : (elev2 - elev) / dist;
+                                grades.push(grade);
+                                if (unitsPerMeter === null && dist > 0) {
+                                        const next = coords[i + 1];
+                                        const dx = (next[0] - lon) * scale;
+                                        const dz = (next[1] - lat) * scale;
+                                        const planar = Math.sqrt(dx * dx + dz * dz);
+                                        if (planar > 0) {
+                                                unitsPerMeter = planar / dist;
+                                        }
+                                }
+                        }
+                }
+                const segments = pts.length - 1;
+                const radial = 8;
+                const curve = new THREE.CatmullRomCurve3(pts);
+                const fallbackUnitsPerMeter = scale > 0 ? 1 / scale : 0;
+                const resolvedUnitsPerMeter =
+                        widthMeters > 0
+                                ? unitsPerMeter || fallbackUnitsPerMeter || 0
+                                : unitsPerMeter || fallbackUnitsPerMeter;
+                const rawRadius =
+                        widthMeters > 0 && resolvedUnitsPerMeter > 0
+                                ? (widthMeters * resolvedUnitsPerMeter) / 2
+                                : 0.5;
+                const radius = Math.max(rawRadius, 0.01);
+                const geom = new THREE.TubeGeometry(curve, segments, radius, radial, false);
+                const useGradient = widthMeters <= 0 || !color || color === 'gradient';
+                let material: THREE.MeshStandardMaterial;
+                if (useGradient) {
+                        const colors = new Float32Array((segments + 1) * (radial + 1) * 3);
+                        for (let i = 0; i <= segments; i++) {
+                                const g = i === segments ? grades[segments - 1] : grades[i];
+                                const col = new THREE.Color(interpolateSlopeColor(g));
+                                for (let j = 0; j <= radial; j++) {
+                                        const idx = (i * (radial + 1) + j) * 3;
+                                        colors[idx] = col.r;
+                                        colors[idx + 1] = col.g;
+                                        colors[idx + 2] = col.b;
+                                }
+                        }
+                        geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                        material = new THREE.MeshStandardMaterial({ vertexColors: true });
+                } else {
+                        let meshColor: THREE.Color;
+                        try {
+                                meshColor = new THREE.Color(color);
+                        } catch (err) {
+                                meshColor = new THREE.Color('#ff524f');
+                        }
+                        material = new THREE.MeshStandardMaterial({ color: meshColor });
+                }
+                const mesh = new THREE.Mesh(geom, material);
+                mesh.userData = { grades };
+                pathGroup.add(mesh);
+                if (!modelGroup.children.includes(pathGroup)) {
+                        modelGroup.add(pathGroup);
 		}
 	}
 
@@ -400,10 +441,14 @@
 			path = v;
 			buildPathGeometry(path, currentBaseHeight, currentScale);
 		});
-		const unsubRoute = routeStore.subscribe((s) => {
-			elevations = s.elevations;
-			buildPathGeometry(path, currentBaseHeight, currentScale);
-		});
+                const unsubRoute = routeStore.subscribe((s) => {
+                        elevations = s.elevations;
+                        buildPathGeometry(path, currentBaseHeight, currentScale);
+                });
+                const unsubPathStyle = pathStyleStore.subscribe((style) => {
+                        pathStyle = style;
+                        buildPathGeometry(path, currentBaseHeight, currentScale);
+                });
 
 		window.addEventListener('resize', onResize);
 		renderer.domElement.addEventListener('pointermove', onPointerMove);
@@ -415,7 +460,8 @@
 			unsubLoading();
 			unsubError();
 			unsubPath();
-			unsubRoute();
+                        unsubRoute();
+                        unsubPathStyle();
 			window.removeEventListener('resize', onResize);
 			controls.dispose();
 			renderer.dispose();

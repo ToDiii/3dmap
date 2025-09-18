@@ -114,11 +114,13 @@ describe('map2model importer', () => {
 		expect(get(uiConfigStore).frame.enabled).toBe(true);
 		expect(get(colorPalette).road).toBe('#111');
 		expect(get(colorPalette).buildingResidential).toBe('#444');
-		expect(get(colorPalette).buildingCommercial).toBe('#444');
-		expect(get(colorPalette).buildingIndustrial).toBe('#444');
-		expect(get(pathStore)).toEqual(proj.generatorOptions.gpxPathGeoJSON);
-		expect(get(pathStyleStore).widthMeters).toBe(2);
-	});
+                expect(get(colorPalette).buildingCommercial).toBe('#444');
+                expect(get(colorPalette).buildingIndustrial).toBe('#444');
+                expect(get(pathStore)).toEqual(proj.generatorOptions.gpxPathGeoJSON);
+                expect(get(pathStyleStore).color).toBe('#ff0000');
+                expect(get(pathStyleStore).widthMeters).toBe(2);
+                expect(get(pathStyleStore).heightMM).toBe(1);
+        });
 
 	it('updates legend colors after importing a palette', async () => {
 		const container = document.createElement('div');
