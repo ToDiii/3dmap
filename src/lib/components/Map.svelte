@@ -9,10 +9,11 @@
 	import { modelGeo } from '$lib/stores/modelGeoStore';
 	import { modelError } from '$lib/stores/modelStore';
 	import { pathStore } from '$lib/stores/pathStore';
+	import { pathStyleStore } from '$lib/stores/pathStyleStore';
 	import * as THREE from 'three';
-	import { COLORS } from '$lib/constants/palette';
 	import { getBuildingMaterial, disposeBuildingMaterials } from '$lib/three/materials';
 	import { colorPalette } from '$lib/stores/colorPalette';
+	import type { ColorPalette } from '$lib/stores/colorPalette';
 
 	export let map: maplibregl.Map | undefined;
 
@@ -32,29 +33,67 @@
 	let unsubErr: (() => void) | null = null;
 	let toastMessage: string | null = null;
 	let unsubPalette: (() => void) | null = null;
+	let unsubPathStyle: (() => void) | null = null;
 
 	const emptyFC: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
-	let palette = get(colorPalette);
-	unsubPalette = colorPalette.subscribe((p) => {
-		palette = p;
+	let palette: ColorPalette = get(colorPalette);
+	let pathStyle = get(pathStyleStore);
+
+	function buildingColorExpression(p: ColorPalette) {
+		return [
+			'match',
+			['get', 'subtype'],
+			'building_commercial',
+			p.buildingCommercial ?? p.building,
+			'building_industrial',
+			p.buildingIndustrial ?? p.building,
+			'building_residential',
+			p.buildingResidential ?? p.building,
+			p.building,
+		];
+	}
+
+	function updateLayerColors() {
 		if (!map) return;
 		const setPaint = (layer: string, prop: string, value: any) => {
 			if (map?.getLayer(layer)) {
 				map.setPaintProperty(layer, prop, value);
 			}
 		};
+		setPaint('extrude-buildings', 'fill-extrusion-color', buildingColorExpression(palette));
 		setPaint('model-water', 'fill-color', palette.water);
 		setPaint('model-green', 'fill-color', palette.greenery);
 		setPaint('model-sand', 'fill-color', palette.sand);
 		setPaint('model-roads', 'fill-extrusion-color', palette.road);
 		setPaint('model-piers', 'fill-extrusion-color', palette.pier);
+	}
+
+	function updateRouteStyle() {
+		if (!map) return;
+		if (map.getLayer(routeLayerId)) {
+			map.setPaintProperty(routeLayerId, 'line-color', pathStyle.color);
+		}
+	}
+
+	unsubPalette = colorPalette.subscribe((p) => {
+		palette = p;
+		updateLayerColors();
+	});
+
+	unsubPathStyle = pathStyleStore.subscribe((style) => {
+		pathStyle = style;
+		updateRouteStyle();
 	});
 
 	onDestroy(() => {
 		if (unsubPalette) {
 			unsubPalette();
 			unsubPalette = null;
+		}
+		if (unsubPathStyle) {
+			unsubPathStyle();
+			unsubPathStyle = null;
 		}
 	});
 
@@ -117,17 +156,7 @@
 				source: 'model-geo',
 				filter: ['==', ['get', 'featureType'], 'building'],
 				paint: {
-					'fill-extrusion-color': [
-						'match',
-						['get', 'subtype'],
-						'building_commercial',
-						COLORS.building_commercial,
-						'building_industrial',
-						COLORS.building_industrial,
-						'building_residential',
-						COLORS.building_residential,
-						COLORS.building_residential,
-					],
+					'fill-extrusion-color': buildingColorExpression(palette),
 					'fill-extrusion-opacity': 0.9,
 					'fill-extrusion-height': ['get', 'height_final'],
 					'fill-extrusion-base': ['get', 'base_height'],
@@ -242,7 +271,7 @@
 							id: routeLayerId,
 							type: 'line',
 							source: routeSourceId,
-							paint: { 'line-color': COLORS.route, 'line-width': 4 },
+							paint: { 'line-color': pathStyle.color, 'line-width': 4 },
 						});
 					}
 				} else {
@@ -285,6 +314,10 @@
 			if (unsubPalette) {
 				unsubPalette();
 				unsubPalette = null;
+			}
+			if (unsubPathStyle) {
+				unsubPathStyle();
+				unsubPathStyle = null;
 			}
 			mapStore.set(undefined);
 			extrudeGroupStore.set(null);

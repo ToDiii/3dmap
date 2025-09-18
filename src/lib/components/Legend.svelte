@@ -1,26 +1,27 @@
 <script lang="ts">
-	import { COLORS, SLOPE_GRADIENT } from '$lib/constants/palette';
+	import { SLOPE_GRADIENT } from '$lib/constants/palette';
+	import { colorPalette } from '$lib/stores/colorPalette';
 </script>
 
 <div class="space-y-2 text-sm">
 	<div class="flex items-center gap-2">
-		<span class="h-4 w-4" style="background:{COLORS.building_residential}"></span>
+		<span class="h-4 w-4" style="background:{$colorPalette.buildingResidential}"></span>
 		Wohnen
 	</div>
 	<div class="flex items-center gap-2">
-		<span class="h-4 w-4" style="background:{COLORS.building_commercial}"></span>
+		<span class="h-4 w-4" style="background:{$colorPalette.buildingCommercial}"></span>
 		Gewerbe
 	</div>
 	<div class="flex items-center gap-2">
-		<span class="h-4 w-4" style="background:{COLORS.building_industrial}"></span>
+		<span class="h-4 w-4" style="background:{$colorPalette.buildingIndustrial}"></span>
 		Industrie
 	</div>
 	<div class="flex items-center gap-2">
-		<span class="h-4 w-4" style="background:{COLORS.water}"></span>
+		<span class="h-4 w-4" style="background:{$colorPalette.water}"></span>
 		Wasser
 	</div>
 	<div class="flex items-center gap-2">
-		<span class="h-4 w-4" style="background:{COLORS.green}"></span>
+		<span class="h-4 w-4" style="background:{$colorPalette.greenery}"></span>
 		Grün
 	</div>
 	<div class="mt-2">
